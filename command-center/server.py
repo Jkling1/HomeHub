@@ -436,6 +436,63 @@ async def stock_check():
     return {"ok": True, "fired": len(fired)}
 
 
+@app.get("/agents/status")
+async def agents_status():
+    from pathlib import Path
+    import json
+    state_file = SCRIPT_DIR / "agent_state.json"
+    state = {}
+    if state_file.exists():
+        try:
+            state = json.loads(state_file.read_text())
+        except:
+            pass
+    log_file = SCRIPT_DIR / "agent.log"
+    recent_logs = []
+    if log_file.exists():
+        lines = log_file.read_text().splitlines()
+        recent_logs = lines[-30:]
+    return {"state": state, "recent_logs": recent_logs}
+
+
+class AgentRunRequest(BaseModel):
+    agent: str
+    mission: str = ""
+
+
+@app.post("/agents/run")
+async def run_agent(req_body: AgentRunRequest):
+    import asyncio, subprocess
+    agent = req_body.agent
+    mission = req_body.mission
+
+    if agent == "orchestrator" and not mission:
+        raise HTTPException(400, "Orchestrator requires a mission")
+
+    valid = {"morning", "accountability", "adaptive", "stock", "orchestrator"}
+    if agent not in valid:
+        raise HTTPException(400, f"Unknown agent: {agent}")
+
+    # Run in background subprocess so it doesn't block
+    args = ["python3", str(SCRIPT_DIR / "run_agent.py"), agent]
+    if mission:
+        args.append(mission)
+
+    subprocess.Popen(args, cwd=str(SCRIPT_DIR),
+                     stdout=open(str(SCRIPT_DIR / "agent.log"), "a"),
+                     stderr=subprocess.STDOUT)
+    return {"ok": True, "agent": agent, "mission": mission or None}
+
+
+@app.get("/agents/log")
+async def agents_log():
+    log_file = SCRIPT_DIR / "agent.log"
+    if not log_file.exists():
+        return {"lines": []}
+    lines = log_file.read_text().splitlines()
+    return {"lines": lines[-100:]}
+
+
 @app.get("/", response_class=HTMLResponse)
 async def dashboard():
     return FileResponse(str(SCRIPT_DIR / "static" / "index.html"))
