@@ -280,6 +280,162 @@ async def briefing():
     return {"result": exec_briefing()}
 
 
+@app.get("/ironmind/plan")
+async def im_plan():
+    import ironmind
+    return {"result": ironmind.get_plan()}
+
+
+@app.get("/ironmind/log")
+async def im_get_log():
+    import ironmind
+    return {"result": ironmind.get_log()}
+
+
+class IMLogRequest(BaseModel):
+    metrics: dict
+
+
+@app.post("/ironmind/log")
+async def im_log(req_body: IMLogRequest):
+    import ironmind
+    return {"result": ironmind.log_metrics(req_body.metrics)}
+
+
+@app.get("/ironmind/streaks")
+async def im_streaks():
+    from database import im_get_streaks
+    return im_get_streaks()
+
+
+@app.get("/ironmind/coach")
+async def im_coach():
+    import ironmind
+    return {"result": ironmind.get_coaching()}
+
+
+@app.get("/ironmind/review")
+async def im_review():
+    import ironmind
+    return {"result": ironmind.weekly_review()}
+
+
+@app.get("/ironmind/identity")
+async def im_identity():
+    from database import im_get_identity
+    return im_get_identity()
+
+
+@app.get("/ironmind/journal")
+async def im_journal():
+    import ironmind
+    return {"result": ironmind.get_journal()}
+
+
+@app.get("/scenes")
+async def list_scenes():
+    from database import get_scenes
+    return get_scenes()
+
+
+class SceneSaveRequest(BaseModel):
+    name: str
+    inputs: list
+
+
+@app.post("/scenes")
+async def save_scene_endpoint(req_body: SceneSaveRequest):
+    from database import save_scene
+    save_scene(req_body.name, req_body.inputs)
+    return {"ok": True, "name": req_body.name}
+
+
+@app.post("/scenes/{scene_name}/run")
+async def run_scene_endpoint(scene_name: str):
+    from database import get_scene
+    scene = get_scene(scene_name)
+    if not scene:
+        raise HTTPException(404, f"Scene '{scene_name}' not found")
+    result = execute_cmd({"action": "scene", "command": "run", "name": scene_name})
+    return {"ok": True, "result": result}
+
+
+@app.delete("/scenes/{scene_name}")
+async def delete_scene_endpoint(scene_name: str):
+    from database import get_scene, delete_scene
+    if not get_scene(scene_name):
+        raise HTTPException(404, f"Scene '{scene_name}' not found")
+    delete_scene(scene_name)
+    return {"ok": True}
+
+
+@app.get("/patterns")
+async def get_patterns():
+    from pattern_engine import build_jordan_model
+    return build_jordan_model(days=60)
+
+
+@app.get("/report")
+async def get_report():
+    from weekly_report import generate_report
+    return {"result": generate_report(send=False)}
+
+
+@app.get("/stocks/alerts")
+async def stock_alerts_list():
+    import stock_alerts as sa
+    alerts = sa.load_alerts()
+    enriched = []
+    for a in alerts:
+        data = sa.get_price(a["symbol"])
+        enriched.append({**a, "current_price": data["price"] if data else None,
+                         "pct_change": data["pct_change"] if data else None})
+    return enriched
+
+
+class StockAlertRequest(BaseModel):
+    symbol: str
+    type: str = "above"
+    target: float
+
+
+@app.post("/stocks/alerts")
+async def stock_alert_add(req_body: StockAlertRequest):
+    import stock_alerts as sa
+    from datetime import datetime as dt
+    alerts = sa.load_alerts()
+    alert  = {
+        "id":         sa.next_id(alerts),
+        "symbol":     req_body.symbol.upper(),
+        "type":       req_body.type,
+        "target":     req_body.target,
+        "triggered":  False,
+        "created_at": dt.now().isoformat(),
+    }
+    alerts.append(alert)
+    sa.save_alerts(alerts)
+    return {"ok": True, "alert": alert}
+
+
+@app.delete("/stocks/alerts/{alert_id}")
+async def stock_alert_remove(alert_id: int):
+    import stock_alerts as sa
+    alerts = sa.load_alerts()
+    before = len(alerts)
+    alerts = [a for a in alerts if a["id"] != alert_id]
+    if len(alerts) == before:
+        raise HTTPException(404, f"No alert with ID {alert_id}")
+    sa.save_alerts(alerts)
+    return {"ok": True}
+
+
+@app.get("/stocks/check")
+async def stock_check():
+    import stock_alerts as sa
+    fired = sa.run_check(quiet=True)
+    return {"ok": True, "fired": len(fired)}
+
+
 @app.get("/", response_class=HTMLResponse)
 async def dashboard():
     return FileResponse(str(SCRIPT_DIR / "static" / "index.html"))
