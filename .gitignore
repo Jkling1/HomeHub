@@ -1,0 +1,32 @@
+# Secrets — never commit these
+command-center/.env
+command-center/wakeup_config.json
+
+# Database
+command-center/hub.db
+
+# Logs
+command-center/*.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.Python
+*.egg-info/
+
+# macOS
+.DS_Store
+.AppleDouble
+
+# Node
+node_modules/
+
+# Env files anywhere
+.env
+.env.local
+.env.*
+
+# Large dirs we don't want
+Downloads/
+Library/
