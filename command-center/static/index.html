@@ -3,247 +3,286 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jordan's Smart Hub</title>
+<title>Jordan's Command Center</title>
 <style>
 :root {
-  --bg: #0a0e17;
-  --bg2: #111827;
-  --bg3: #1a2235;
-  --border: #1e2d45;
-  --accent: #00d4ff;
-  --accent2: #7c3aed;
-  --green: #00ff88;
-  --red: #ff4d6d;
-  --yellow: #ffd60a;
-  --text: #e2e8f0;
-  --muted: #64748b;
-  --mono: 'JetBrains Mono', 'Fira Code', monospace;
-  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --bg: #090d14; --bg2: #0f1623; --bg3: #151e2d; --bg4: #1a2538;
+  --border: #1e2d45; --border2: #253550;
+  --accent: #00d4ff; --accent2: #7c3aed; --green: #00ff88;
+  --red: #ff4d6d; --yellow: #ffd60a; --orange: #ff8c42;
+  --text: #e2e8f0; --muted: #4a6080; --muted2: #64748b;
+  --mono: 'JetBrains Mono','Fira Code',monospace;
+  --sans: -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); overflow-x: hidden; }
-
-/* Animated background */
-body::before {
-  content: '';
-  position: fixed; inset: 0; z-index: 0;
-  background: radial-gradient(ellipse 80% 50% at 20% 10%, rgba(0,212,255,0.05) 0%, transparent 60%),
-              radial-gradient(ellipse 60% 40% at 80% 80%, rgba(124,58,237,0.06) 0%, transparent 60%);
-  pointer-events: none;
-}
-
-.app { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 50% at 20% 5%,rgba(0,212,255,.04) 0%,transparent 60%),
+             radial-gradient(ellipse 60% 40% at 85% 85%,rgba(124,58,237,.05) 0%,transparent 60%)}
+.app{position:relative;z-index:1;max-width:1440px;margin:0 auto;padding:1.25rem 1.5rem}
 
 /* ── Header ── */
-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 1rem 1.5rem; margin-bottom: 1.5rem;
-  background: var(--bg2); border: 1px solid var(--border); border-radius: 16px;
-}
-.header-left { display: flex; align-items: center; gap: 1rem; }
-.pulse-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green);
-  box-shadow: 0 0 12px var(--green); animation: pulse 2s ease-in-out infinite; }
-@keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 12px var(--green)} 50%{opacity:.5;box-shadow:0 0 4px var(--green)} }
-h1 { font-size: 1.4rem; font-family: var(--mono); font-weight: 700; }
-h1 span { color: var(--accent); }
-.header-right { text-align: right; }
-#clock { font-size: 1.8rem; font-family: var(--mono); font-weight: 700; color: var(--accent); }
-#date-str { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+header{display:flex;align-items:center;justify-content:space-between;
+  padding:.9rem 1.5rem;margin-bottom:0;
+  background:var(--bg2);border:1px solid var(--border);border-radius:16px 16px 0 0}
+.header-left{display:flex;align-items:center;gap:.9rem}
+.pulse-dot{width:9px;height:9px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 10px var(--green);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 10px var(--green)}50%{opacity:.4;box-shadow:0 0 3px var(--green)}}
+h1{font-size:1.25rem;font-family:var(--mono);font-weight:700;letter-spacing:-.01em}
+h1 span{color:var(--accent)}
+.subtitle{font-size:.7rem;color:var(--muted2);font-family:var(--mono);margin-top:1px}
+#clock{font-size:1.6rem;font-family:var(--mono);font-weight:700;color:var(--accent);line-height:1}
+#date-str{font-size:.7rem;color:var(--muted2);text-align:right;margin-top:2px}
+
+/* ── Tab bar ── */
+.tab-bar{display:flex;background:var(--bg2);border:1px solid var(--border);border-top:none;
+  border-radius:0 0 0 0;overflow-x:auto;scrollbar-width:none}
+.tab-bar::-webkit-scrollbar{display:none}
+.tab{padding:.7rem 1.4rem;font-size:.8rem;font-family:var(--mono);font-weight:600;
+  color:var(--muted2);cursor:pointer;border:none;background:transparent;
+  border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* ── Content area ── */
+.tab-content{display:none;animation:fade-in .2s ease}
+.tab-content.active{display:block}
+@keyframes fade-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 
 /* ── Grid ── */
-.grid { display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: auto; gap: 1.2rem; }
+.grid{display:grid;gap:1rem;padding-top:1rem}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:1fr 1fr 1fr}
+.g12{grid-template-columns:1fr 2fr}
+.g21{grid-template-columns:2fr 1fr}
+.span2{grid-column:span 2}
+.span3{grid-column:span 3}
+@media(max-width:900px){.g3{grid-template-columns:1fr 1fr}.span3{grid-column:span 2}}
+@media(max-width:640px){.g2,.g3,.g12,.g21{grid-template-columns:1fr}.span2,.span3{grid-column:span 1}}
 
-/* ── Cards ── */
-.card {
-  background: var(--bg2); border: 1px solid var(--border); border-radius: 14px;
-  padding: 1.25rem; position: relative; overflow: hidden;
-  transition: border-color .2s, transform .15s;
-}
-.card:hover { border-color: rgba(0,212,255,.25); }
-.card-label {
-  font-size: 0.65rem; text-transform: uppercase; letter-spacing: .12em;
-  color: var(--muted); font-family: var(--mono); margin-bottom: .9rem;
-  display: flex; align-items: center; gap: .4rem;
-}
-.card-label .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+/* ── Card ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  padding:1.2rem;transition:border-color .2s}
+.card:hover{border-color:var(--border2)}
+.card-label{font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;
+  color:var(--muted);font-family:var(--mono);margin-bottom:.85rem;
+  display:flex;align-items:center;gap:.4rem}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.dot-green{background:var(--green)}
+.dot-purple{background:var(--accent2)}
+.dot-yellow{background:var(--yellow)}
+.dot-red{background:var(--red)}
 
-/* ── Voice Command Card ── */
-.voice-card { grid-column: 1 / -1; }
-.voice-area {
-  display: flex; align-items: center; gap: 1rem;
-  background: var(--bg3); border: 1px solid var(--border); border-radius: 12px;
-  padding: .75rem 1rem;
-}
-#cmd-input {
-  flex: 1; background: transparent; border: none; outline: none;
-  color: var(--text); font-family: var(--mono); font-size: 1rem;
-  caret-color: var(--accent);
-}
-#cmd-input::placeholder { color: var(--muted); }
-.btn {
-  padding: .5rem 1.1rem; border-radius: 8px; border: none; cursor: pointer;
-  font-family: var(--mono); font-size: .82rem; font-weight: 600;
-  transition: opacity .15s, transform .1s;
-}
-.btn:hover { opacity: .85; }
-.btn:active { transform: scale(.96); }
-.btn-send { background: var(--accent); color: #000; }
-.btn-voice {
-  width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--bg3); border: 1px solid var(--border);
-  transition: all .2s; position: relative;
-}
-.btn-voice:hover { border-color: var(--accent); }
-.btn-voice.listening {
-  background: rgba(255,77,109,.15); border-color: var(--red);
-  animation: mic-pulse 1s ease-in-out infinite;
-}
-@keyframes mic-pulse {
-  0%,100% { box-shadow: 0 0 0 0 rgba(255,77,109,.4); }
-  50% { box-shadow: 0 0 0 8px rgba(255,77,109,0); }
-}
-.mic-icon { font-size: 1.1rem; }
-.voice-status {
-  font-size: .78rem; color: var(--muted); font-family: var(--mono);
-  margin-top: .5rem; min-height: 1.2em;
-}
-.voice-status.active { color: var(--accent); }
+/* ── Buttons ── */
+.btn{padding:.45rem 1rem;border-radius:8px;border:none;cursor:pointer;
+  font-family:var(--mono);font-size:.8rem;font-weight:600;transition:opacity .15s,transform .1s}
+.btn:hover{opacity:.85}.btn:active{transform:scale(.96)}
+.btn-accent{background:var(--accent);color:#000}
+.btn-ghost{background:var(--bg3);color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-sm{padding:.3rem .7rem;font-size:.72rem}
+.btn-danger{background:rgba(255,77,109,.15);color:var(--red);border:1px solid rgba(255,77,109,.3)}
 
-/* ── Response feed ── */
-.response-feed { grid-column: 1 / -1; max-height: 180px; overflow-y: auto; }
-#feed {
-  display: flex; flex-direction: column; gap: .5rem;
-}
-.feed-item {
-  display: flex; gap: .75rem; padding: .6rem .9rem;
-  background: var(--bg3); border-radius: 10px; border: 1px solid var(--border);
-  animation: slide-in .2s ease;
-}
-@keyframes slide-in { from { opacity:0; transform: translateY(-6px); } to { opacity:1; transform:none; } }
-.feed-item .feed-input { color: var(--muted); font-size:.82rem; min-width: 120px; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.feed-item .feed-result { font-size:.82rem; color:var(--text); flex:1; white-space:pre-line; }
-.feed-item .feed-time { font-size:.7rem; color:var(--muted); font-family:var(--mono); white-space:nowrap; }
+/* ── Command bar ── */
+.cmd-bar{display:flex;align-items:center;gap:.75rem;
+  background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:.65rem 1rem}
+#cmd-input{flex:1;background:transparent;border:none;outline:none;
+  color:var(--text);font-family:var(--mono);font-size:.95rem;caret-color:var(--accent)}
+#cmd-input::placeholder{color:var(--muted)}
+.btn-mic{width:40px;height:40px;border-radius:50%;border:1px solid var(--border);
+  background:var(--bg3);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:1rem;transition:all .2s;flex-shrink:0}
+.btn-mic:hover{border-color:var(--accent)}
+.btn-mic.listening{background:rgba(255,77,109,.15);border-color:var(--red);
+  animation:mic-pulse 1s ease-in-out infinite}
+@keyframes mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,77,109,.4)}50%{box-shadow:0 0 0 8px rgba(255,77,109,0)}}
+.voice-hint{font-size:.72rem;color:var(--muted);font-family:var(--mono);margin-top:.4rem}
 
-/* ── Weather card ── */
-.weather-temp { font-size: 2.8rem; font-weight: 700; color: var(--accent); font-family: var(--mono); line-height: 1; }
-.weather-desc { font-size: .9rem; color: var(--muted); margin-top: .3rem; }
-.weather-meta { font-size: .78rem; color: var(--muted); margin-top: .5rem; }
+/* ── Feed ── */
+.feed{display:flex;flex-direction:column;gap:.4rem;max-height:200px;overflow-y:auto}
+.feed-item{display:flex;gap:.6rem;padding:.5rem .8rem;
+  background:var(--bg3);border-radius:8px;border:1px solid var(--border);
+  animation:slide-in .15s ease}
+@keyframes slide-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.fi-in{color:var(--muted2);font-size:.78rem;min-width:100px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fi-res{font-size:.78rem;flex:1;white-space:pre-line}
+.fi-time{font-size:.65rem;color:var(--muted);font-family:var(--mono);white-space:nowrap}
 
-/* ── Stock card ── */
-.stock-sym { font-size: 1.6rem; font-weight: 700; font-family: var(--mono); }
-.stock-price { font-size: 1.1rem; color: var(--muted); font-family: var(--mono); }
-.stock-pct { font-size: 1rem; font-weight: 700; font-family: var(--mono); margin-top: .3rem; }
-.gain { color: var(--green); } .loss { color: var(--red); }
+/* ── Weather ── */
+.weather-temp{font-size:3rem;font-weight:700;color:var(--accent);font-family:var(--mono);line-height:1}
+.weather-desc{font-size:.9rem;color:var(--muted2);margin-top:.3rem}
+.weather-meta{font-size:.75rem;color:var(--muted);margin-top:.4rem}
 
-/* ── Lights card ── */
-.color-grid { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .25rem; }
-.color-btn {
-  width: 36px; height: 36px; border-radius: 50%; border: 2px solid transparent;
-  cursor: pointer; transition: transform .15s, border-color .15s;
-}
-.color-btn:hover { transform: scale(1.15); border-color: white; }
-.color-btn.active { border-color: white; transform: scale(1.1); }
-.light-status { font-size: .8rem; font-family: var(--mono); margin-top: .75rem; color: var(--muted); }
-.light-swatch { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; }
+/* ── Stock ── */
+.stock-sym{font-size:1.8rem;font-weight:700;font-family:var(--mono)}
+.stock-price{font-size:1rem;color:var(--muted2);font-family:var(--mono)}
+.stock-pct{font-size:1rem;font-weight:700;font-family:var(--mono);margin-top:.2rem}
+.gain{color:var(--green)}.loss{color:var(--red)}
 
-/* ── Music card ── */
-.music-now { font-size: .95rem; font-weight: 600; margin-bottom: .2rem; white-space: nowrap; overflow:hidden; text-overflow:ellipsis; }
-.music-artist { font-size: .82rem; color: var(--muted); white-space: nowrap; overflow:hidden; text-overflow:ellipsis; }
-.music-controls { display: flex; align-items: center; gap: .5rem; margin-top: 1rem; }
-.ctrl-btn {
-  width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border);
-  background: var(--bg3); color: var(--text); cursor: pointer; font-size: .9rem;
-  display: flex; align-items: center; justify-content: center;
-  transition: background .15s, border-color .15s;
-}
-.ctrl-btn:hover { background: var(--border); border-color: var(--accent); }
-.ctrl-btn.play-btn { background: var(--accent); color: #000; border-color: var(--accent); font-size: 1rem; }
-.vol-slider { flex: 1; accent-color: var(--accent); cursor: pointer; }
-.music-idle { color: var(--muted); font-size: .85rem; font-style: italic; }
+/* ── Color grid ── */
+.color-grid{display:flex;flex-wrap:wrap;gap:.5rem}
+.color-btn{width:38px;height:38px;border-radius:50%;border:2px solid transparent;
+  cursor:pointer;transition:transform .15s,border-color .15s,box-shadow .15s}
+.color-btn:hover{transform:scale(1.15);border-color:rgba(255,255,255,.6)}
+.color-btn.active{border-color:#fff;transform:scale(1.1);box-shadow:0 0 12px currentColor}
 
-/* ── Daily card ── */
-.daily-item { font-size: .85rem; line-height: 1.6; margin-bottom: .6rem; }
-.daily-label { font-size: .65rem; color: var(--accent); font-family: var(--mono); text-transform: uppercase; letter-spacing: .08em; margin-bottom: .2rem; }
+/* ── Music ── */
+.music-track{font-size:1rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.music-artist{font-size:.82rem;color:var(--muted2);margin-top:.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.music-controls{display:flex;align-items:center;gap:.5rem;margin-top:1rem}
+.ctrl-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);
+  background:var(--bg3);color:var(--text);cursor:pointer;font-size:.9rem;
+  display:flex;align-items:center;justify-content:center;transition:all .15s}
+.ctrl-btn:hover{background:var(--border);border-color:var(--accent)}
+.ctrl-btn.play-btn{background:var(--accent);color:#000;border-color:var(--accent);font-size:1rem}
+.vol-slider{flex:1;accent-color:var(--accent);cursor:pointer}
+.vol-label{font-size:.72rem;font-family:var(--mono);color:var(--muted2);min-width:30px}
+.music-search{display:flex;gap:.5rem;margin-top:1rem}
+.music-search input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  padding:.4rem .7rem;color:var(--text);font-family:var(--mono);font-size:.82rem;outline:none}
+.music-search input:focus{border-color:var(--accent)}
 
-/* ── News card ── */
-.news-card { grid-column: span 2; }
-.news-list { display: flex; flex-direction: column; gap: .4rem; }
-.news-item { font-size: .82rem; line-height: 1.4; padding: .4rem .6rem; background: var(--bg3); border-radius: 6px; border-left: 2px solid var(--accent2); }
+/* ── IronMind ── */
+.im-score{font-size:3.5rem;font-weight:700;font-family:var(--mono);line-height:1;color:var(--accent)}
+.im-score-label{font-size:.7rem;color:var(--muted2);font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;margin-top:.3rem}
+.streak-item{display:flex;align-items:center;gap:.75rem;padding:.5rem 0;border-bottom:1px solid var(--border)}
+.streak-item:last-child{border-bottom:none}
+.streak-name{font-size:.82rem;font-family:var(--mono);min-width:120px}
+.streak-bar-wrap{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.streak-bar{height:100%;border-radius:3px;background:var(--accent);transition:width .5s}
+.streak-num{font-size:.82rem;font-family:var(--mono);color:var(--accent);min-width:40px;text-align:right}
+.streak-fire{font-size:.85rem}
+.log-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.log-field{display:flex;flex-direction:column;gap:.3rem}
+.log-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted2);font-family:var(--mono)}
+.log-input{background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  padding:.4rem .7rem;color:var(--text);font-family:var(--mono);font-size:.85rem;outline:none;width:100%}
+.log-input:focus{border-color:var(--accent)}
+.log-check{display:flex;align-items:center;gap:.5rem;cursor:pointer}
+.log-check input{accent-color:var(--accent);width:16px;height:16px;cursor:pointer}
+.im-plan-item{padding:.5rem 0;border-bottom:1px solid var(--border);font-size:.85rem}
+.im-plan-item:last-child{border-bottom:none}
+.im-plan-label{font-size:.62rem;color:var(--accent);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.2rem}
+.im-identity-item{padding:.45rem .7rem;background:var(--bg3);border-radius:8px;
+  font-size:.82rem;border-left:2px solid var(--accent2);margin-bottom:.4rem}
+.coach-box{background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  padding:1rem;font-size:.85rem;line-height:1.7;white-space:pre-line;color:var(--text)}
 
-/* ── History card ── */
-.history-list { display: flex; flex-direction: column; gap: .4rem; max-height: 200px; overflow-y: auto; }
-.hist-item { font-size: .75rem; font-family: var(--mono); padding: .35rem .6rem; background: var(--bg3); border-radius: 6px; display:flex; gap:.5rem; }
-.hist-in { color: var(--muted); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.hist-action { color: var(--accent); font-size:.65rem; white-space:nowrap; }
+/* ── News ── */
+.news-item{font-size:.8rem;line-height:1.5;padding:.45rem .7rem;
+  background:var(--bg3);border-radius:7px;border-left:2px solid var(--accent2);margin-bottom:.35rem}
 
-/* ── Loading / spinner ── */
-.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+/* ── History ── */
+.hist-item{display:flex;gap:.5rem;padding:.35rem .6rem;
+  background:var(--bg3);border-radius:6px;font-size:.72rem;font-family:var(--mono);margin-bottom:.3rem}
+.hist-in{color:var(--muted2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist-action{color:var(--accent);white-space:nowrap;font-size:.65rem}
+
+/* ── Analytics ── */
+.bar-chart{display:flex;flex-direction:column;gap:.3rem}
+.bar-row{display:flex;align-items:center;gap:.6rem}
+.bar-label{font-size:.65rem;font-family:var(--mono);color:var(--muted2);min-width:40px;text-align:right}
+.bar-track{flex:1;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width .6s}
+.bar-val{font-size:.65rem;font-family:var(--mono);color:var(--muted2);min-width:28px}
+.stat-row{display:flex;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid var(--border);font-size:.82rem}
+.stat-row:last-child{border-bottom:none}
+.stat-val{color:var(--accent);font-family:var(--mono);font-weight:600}
+
+/* ── Alert item ── */
+.alert-item{display:flex;align-items:center;gap:.75rem;padding:.5rem .8rem;
+  background:var(--bg3);border-radius:8px;border:1px solid var(--border);margin-bottom:.35rem}
+.alert-sym{font-size:.9rem;font-weight:700;font-family:var(--mono);min-width:55px;color:var(--accent)}
+.alert-cond{font-size:.78rem;color:var(--muted2);flex:1}
+.alert-price{font-size:.78rem;font-family:var(--mono);color:var(--text)}
+
+/* ── Briefing ── */
+.briefing-section{margin-bottom:1.25rem}
+.briefing-section-title{font-size:.65rem;text-transform:uppercase;letter-spacing:.12em;
+  color:var(--accent);font-family:var(--mono);margin-bottom:.5rem}
+.briefing-text{font-size:.85rem;line-height:1.7;color:var(--text)}
+
+/* ── Spinner ── */
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 /* ── Scrollbar ── */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: var(--bg2); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 
-/* ── Responsive ── */
-@media(max-width:900px) {
-  .grid { grid-template-columns: 1fr 1fr; }
-  .news-card { grid-column: span 2; }
-}
-@media(max-width:600px) {
-  .grid { grid-template-columns: 1fr; }
-  .news-card, .response-feed, .voice-card { grid-column: span 1; }
-}
+/* ── Separators ── */
+.section-gap{margin-top:1rem}
+.muted{color:var(--muted2)}
+.mono{font-family:var(--mono)}
+.tag{display:inline-block;padding:.15rem .45rem;border-radius:4px;font-size:.65rem;
+  font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em}
+.tag-green{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.2)}
+.tag-red{background:rgba(255,77,109,.1);color:var(--red);border:1px solid rgba(255,77,109,.2)}
+.tag-blue{background:rgba(0,212,255,.1);color:var(--accent);border:1px solid rgba(0,212,255,.2)}
 </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- Header -->
-  <header>
-    <div class="header-left">
-      <div class="pulse-dot"></div>
-      <div>
-        <h1>Jordan's <span>Smart Hub</span></h1>
-        <div style="font-size:.75rem;color:var(--muted);font-family:var(--mono)">// powered by Claude AI</div>
+<!-- ── Header ── -->
+<header>
+  <div class="header-left">
+    <div class="pulse-dot"></div>
+    <div>
+      <h1>Jordan's <span>Command Center</span></h1>
+      <div class="subtitle">// powered by Adler · localhost:8888</div>
+    </div>
+  </div>
+  <div style="text-align:right">
+    <div id="clock">--:-- --</div>
+    <div id="date-str">Loading...</div>
+  </div>
+</header>
+
+<!-- ── Tab Bar ── -->
+<div class="tab-bar">
+  <button class="tab active" onclick="switchTab('home',this)">🏠 Home</button>
+  <button class="tab" onclick="switchTab('ironmind',this)">🧠 IronMind</button>
+  <button class="tab" onclick="switchTab('lights',this)">💡 Lights</button>
+  <button class="tab" onclick="switchTab('music',this)">🎵 Music</button>
+  <button class="tab" onclick="switchTab('intel',this)">📡 Intel</button>
+  <button class="tab" onclick="switchTab('analytics',this)">📊 Analytics</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- TAB: HOME -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="tab-content active" id="tab-home">
+  <div class="grid g3">
+
+    <!-- Command bar (full width) -->
+    <div class="card span3">
+      <div class="card-label"><span class="dot"></span> Command — type or speak anything</div>
+      <div class="cmd-bar">
+        <input id="cmd-input" type="text" placeholder="Turn lights blue, play Drake, log workout done, coach me..." autocomplete="off"/>
+        <button class="btn-mic" id="voice-btn">🎙</button>
+        <button class="btn btn-accent" id="send-btn">Send</button>
       </div>
-    </div>
-    <div class="header-right">
-      <div id="clock">--:-- --</div>
-      <div id="date-str">Loading...</div>
-    </div>
-  </header>
-
-  <div class="grid">
-
-    <!-- Voice / Command Bar -->
-    <div class="card voice-card">
-      <div class="card-label"><span class="dot"></span> Command Center — type or speak</div>
-      <div class="voice-area">
-        <input id="cmd-input" type="text" placeholder="Turn lights blue, play Drake, give me my briefing..." autocomplete="off" />
-        <button class="btn-voice" id="voice-btn" title="Hold to speak">
-          <span class="mic-icon">🎙</span>
-        </button>
-        <button class="btn btn-send" id="send-btn">Send</button>
-      </div>
-      <div class="voice-status" id="voice-status">Click 🎙 to speak a command</div>
+      <div class="voice-hint" id="voice-status">Click 🎙 to speak</div>
     </div>
 
-    <!-- Response Feed -->
-    <div class="card response-feed">
-      <div class="card-label"><span class="dot"></span> Live Feed</div>
-      <div id="feed">
+    <!-- Live Feed -->
+    <div class="card span3">
+      <div class="card-label"><span class="dot dot-green"></span> Live Feed</div>
+      <div class="feed" id="feed">
         <div class="feed-item">
-          <span class="feed-input">System</span>
-          <span class="feed-result">Hub online. Ready for commands.</span>
-          <span class="feed-time">Now</span>
+          <span class="fi-in">System</span>
+          <span class="fi-res">Hub online. Ready.</span>
+          <span class="fi-time">Now</span>
         </div>
       </div>
     </div>
 
     <!-- Weather -->
-    <div class="card" id="weather-card">
+    <div class="card">
       <div class="card-label"><span class="dot"></span> 🌤 Weather — Rockford, IL</div>
       <div class="weather-temp" id="w-temp">--°F</div>
       <div class="weather-desc" id="w-desc">Loading...</div>
@@ -251,379 +290,877 @@ h1 span { color: var(--accent); }
     </div>
 
     <!-- Stock -->
-    <div class="card" id="stock-card">
-      <div class="card-label"><span class="dot"></span> 📈 Market Spotlight</div>
+    <div class="card">
+      <div class="card-label"><span class="dot dot-yellow"></span> 📈 Top Mover</div>
       <div class="stock-sym" id="s-sym">--</div>
       <div class="stock-price" id="s-price">$--.--</div>
-      <div class="stock-pct" id="s-pct">-- %</div>
+      <div class="stock-pct" id="s-pct">--%</div>
     </div>
 
-    <!-- Lights -->
+    <!-- Quick IronMind snapshot -->
     <div class="card">
-      <div class="card-label"><span class="dot"></span> 💡 Smart Lights</div>
-      <div class="color-grid" id="color-grid">
-        <!-- filled by JS -->
-      </div>
-      <div class="light-status" id="light-status">Loading state...</div>
-    </div>
-
-    <!-- Music -->
-    <div class="card">
-      <div class="card-label"><span class="dot"></span> 🎵 Apple Music</div>
-      <div id="music-content">
-        <div class="music-idle">Nothing playing</div>
-      </div>
-      <div class="music-controls">
-        <button class="ctrl-btn" onclick="musicCmd('back')" title="Previous">⏮</button>
-        <button class="ctrl-btn play-btn" id="play-pause-btn" onclick="togglePlayPause()">▶</button>
-        <button class="ctrl-btn" onclick="musicCmd('skip')" title="Next">⏭</button>
-        <input class="vol-slider" type="range" min="0" max="100" value="50" id="vol-slider"
-               onchange="musicCmd('volume', this.value)" title="Volume" />
-        <span style="font-size:.75rem;font-family:var(--mono);color:var(--muted);min-width:30px" id="vol-label">50%</span>
-      </div>
-    </div>
-
-    <!-- Daily Cards -->
-    <div class="card">
-      <div class="card-label"><span class="dot"></span> ✨ Today</div>
-      <div id="daily-affirmation" class="daily-item">
-        <div class="daily-label">Affirmation</div>
-        <div id="aff-text" style="color:var(--green);font-weight:600">Loading...</div>
-      </div>
-      <div class="daily-item">
-        <div class="daily-label">🔥 Stop Procrastinating</div>
-        <div id="nudge-text">Loading...</div>
-      </div>
-    </div>
-
-    <!-- News -->
-    <div class="card news-card">
-      <div class="card-label"><span class="dot"></span> 📰 Top Headlines</div>
-      <div class="news-list" id="news-list"><div style="color:var(--muted);font-size:.85rem">Loading...</div></div>
-    </div>
-
-    <!-- History -->
-    <div class="card">
-      <div class="card-label"><span class="dot"></span> 🕘 Command History</div>
-      <div class="history-list" id="history-list"></div>
+      <div class="card-label"><span class="dot dot-purple"></span> 🧠 IronMind Today</div>
+      <div id="home-im-score" class="im-score">--</div>
+      <div class="im-score-label">Day Score / 10</div>
+      <div id="home-im-streaks" style="margin-top:.9rem;font-size:.78rem;color:var(--muted2)">Loading streaks...</div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:.8rem" onclick="switchTab('ironmind',document.querySelector('.tab:nth-child(2)'))">Open IronMind →</button>
     </div>
 
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- TAB: IRONMIND -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-ironmind">
+  <div class="grid g3" style="padding-top:1rem">
+
+    <!-- Today's Plan -->
+    <div class="card span2">
+      <div class="card-label"><span class="dot dot-purple"></span> 📋 Mission Briefing — Today's Plan</div>
+      <div id="im-plan-content" style="color:var(--muted2);font-size:.85rem">Loading plan...</div>
+      <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="loadImPlan()">Refresh</button>
+        <button class="btn btn-ghost btn-sm" onclick="setTodaysPlan()">Set Today's Plan</button>
+      </div>
+    </div>
+
+    <!-- Day Score + Quick Stats -->
+    <div class="card">
+      <div class="card-label"><span class="dot dot-green"></span> ⚡ Today's Score</div>
+      <div id="im-score-big" class="im-score" style="font-size:4rem">--</div>
+      <div class="im-score-label">out of 10</div>
+      <div id="im-log-summary" style="margin-top:.9rem;font-size:.78rem;line-height:1.8;color:var(--muted2)"></div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:.8rem" onclick="loadImLog()">Refresh Log</button>
+    </div>
+
+    <!-- Log Form -->
+    <div class="card span3">
+      <div class="card-label"><span class="dot"></span> 📊 Daily Log — 10 Metrics</div>
+      <div class="log-grid">
+        <div class="log-field">
+          <label class="log-label">🏋️ Workout Done</label>
+          <label class="log-check"><input type="checkbox" id="log-workout"> <span style="font-size:.82rem">Completed today</span></label>
+        </div>
+        <div class="log-field">
+          <label class="log-label">🍔 Fast Food</label>
+          <label class="log-check"><input type="checkbox" id="log-fastfood"> <span style="font-size:.82rem">Ate fast food</span></label>
+        </div>
+        <div class="log-field">
+          <label class="log-label">🍺 Alcohol</label>
+          <label class="log-check"><input type="checkbox" id="log-alcohol"> <span style="font-size:.82rem">Had alcohol</span></label>
+        </div>
+        <div class="log-field">
+          <label class="log-label">🎭 Mood (1–10)</label>
+          <input class="log-input" type="number" id="log-mood" min="1" max="10" placeholder="8">
+        </div>
+        <div class="log-field">
+          <label class="log-label">😴 Sleep Hours</label>
+          <input class="log-input" type="number" id="log-sleep" step="0.5" placeholder="7.5">
+        </div>
+        <div class="log-field">
+          <label class="log-label">⭐ Sleep Quality (1–10)</label>
+          <input class="log-input" type="number" id="log-sleep-q" min="1" max="10" placeholder="7">
+        </div>
+        <div class="log-field">
+          <label class="log-label">🥩 Protein (g)</label>
+          <input class="log-input" type="number" id="log-protein" placeholder="180">
+        </div>
+        <div class="log-field">
+          <label class="log-label">💧 Hydration (oz)</label>
+          <input class="log-input" type="number" id="log-water" placeholder="80">
+        </div>
+        <div class="log-field">
+          <label class="log-label">👟 Steps</label>
+          <input class="log-input" type="number" id="log-steps" placeholder="8000">
+        </div>
+        <div class="log-field">
+          <label class="log-label">⚖️ Weight (lbs)</label>
+          <input class="log-input" type="number" id="log-weight" step="0.1" placeholder="175">
+        </div>
+      </div>
+      <div style="margin-top:1rem;display:flex;gap:.6rem;align-items:center">
+        <button class="btn btn-accent" onclick="submitLog()">Save Log</button>
+        <div id="log-status" style="font-size:.78rem;color:var(--muted2)"></div>
+      </div>
+    </div>
+
+    <!-- Streaks -->
+    <div class="card">
+      <div class="card-label"><span class="dot dot-yellow"></span> 🔥 Streaks</div>
+      <div id="im-streaks"></div>
+    </div>
+
+    <!-- AI Coach -->
+    <div class="card span2">
+      <div class="card-label"><span class="dot dot-red"></span> 🧠 IronMind Coach</div>
+      <div id="im-coach-box" class="coach-box" style="color:var(--muted2);font-style:italic">
+        Hit "Get Coaching" for a brutally honest take on your data.
+      </div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:.75rem" onclick="loadCoach()">Get Coaching</button>
+    </div>
+
+    <!-- Journal -->
+    <div class="card span2">
+      <div class="card-label"><span class="dot"></span> 📓 Daily Journal</div>
+      <div style="display:flex;flex-direction:column;gap:.6rem">
+        <div class="log-field">
+          <label class="log-label">✅ What went right today</label>
+          <textarea class="log-input" id="j-right" rows="2" placeholder="Hit the gym, stuck to nutrition plan..."></textarea>
+        </div>
+        <div class="log-field">
+          <label class="log-label">⚠️ Where I cut corners</label>
+          <textarea class="log-input" id="j-corners" rows="2" placeholder="Skipped water, stayed up too late..."></textarea>
+        </div>
+        <div class="log-field">
+          <label class="log-label">🎯 Tomorrow's standard</label>
+          <textarea class="log-input" id="j-tomorrow" rows="2" placeholder="100oz water minimum, in bed by 11pm..."></textarea>
+        </div>
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <button class="btn btn-accent btn-sm" onclick="submitJournal()">Save Journal</button>
+          <button class="btn btn-ghost btn-sm" onclick="loadJournal()">Load Today's</button>
+          <div id="journal-status" style="font-size:.72rem;color:var(--muted2)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Identity -->
+    <div class="card">
+      <div class="card-label"><span class="dot dot-purple"></span> 🧱 Identity</div>
+      <div id="im-identity"></div>
+      <div style="display:flex;gap:.5rem;margin-top:.75rem">
+        <input class="log-input" id="identity-input" placeholder="I never miss a workout twice..." style="flex:1;font-size:.78rem">
+        <button class="btn btn-ghost btn-sm" onclick="addIdentity()">Add</button>
+      </div>
+    </div>
+
+    <!-- Weekly Review -->
+    <div class="card span3">
+      <div class="card-label"><span class="dot dot-green"></span> 📅 Weekly Review</div>
+      <div id="im-review" style="color:var(--muted2);font-size:.85rem">Hit "Load Review" to see your week.</div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:.75rem" onclick="loadReview()">Load Review</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- TAB: LIGHTS -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-lights">
+  <div class="grid g2" style="padding-top:1rem">
+
+    <div class="card span2">
+      <div class="card-label"><span class="dot"></span> 💡 Smart Lights — Philips Hue</div>
+      <div style="margin-bottom:.75rem;font-size:.8rem;color:var(--muted2)">
+        Current: <span id="lights-current-color" style="color:var(--accent);font-family:var(--mono)">--</span>
+        &nbsp;·&nbsp; Brightness: <span id="lights-bri" style="color:var(--accent);font-family:var(--mono)">--</span>
+      </div>
+      <div class="color-grid" id="color-grid"></div>
+      <div style="margin-top:1.25rem">
+        <div class="log-label" style="margin-bottom:.4rem">Brightness</div>
+        <div style="display:flex;align-items:center;gap:.75rem">
+          <input type="range" class="vol-slider" id="bri-slider" min="1" max="254" value="200" style="flex:1">
+          <span id="bri-label" class="vol-label">200</span>
+          <button class="btn btn-ghost btn-sm" onclick="applyBrightness()">Apply</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label"><span class="dot dot-purple"></span> 🎭 Scenes</div>
+      <div id="lights-scenes" style="color:var(--muted2);font-size:.82rem">Loading scenes...</div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:.75rem" onclick="loadScenes()">Refresh</button>
+    </div>
+
+    <div class="card">
+      <div class="card-label"><span class="dot"></span> ⚡ Quick Actions</div>
+      <div style="display:flex;flex-direction:column;gap:.5rem">
+        <button class="btn btn-ghost" onclick="sendCommand('lights off')">Turn All Off</button>
+        <button class="btn btn-ghost" onclick="sendCommand('lights on')">Turn All On</button>
+        <button class="btn btn-ghost" onclick="sendCommand('lights warm')">Warm White</button>
+        <button class="btn btn-ghost" onclick="sendCommand('lights white')">Bright White</button>
+        <button class="btn btn-ghost" onclick="sendCommand('learn my scenes')">Learn Scenes from History</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- TAB: MUSIC -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-music">
+  <div class="grid g2" style="padding-top:1rem">
+
+    <div class="card">
+      <div class="card-label"><span class="dot dot-green"></span> 🎵 Now Playing</div>
+      <div id="music-now" style="color:var(--muted2);font-style:italic;font-size:.85rem">Nothing playing</div>
+      <div class="music-controls" style="margin-top:1.25rem">
+        <button class="ctrl-btn" onclick="musicCmd('back')">⏮</button>
+        <button class="ctrl-btn play-btn" id="play-btn" onclick="togglePlayPause()">▶</button>
+        <button class="ctrl-btn" onclick="musicCmd('skip')">⏭</button>
+        <input class="vol-slider" type="range" min="0" max="100" value="50" id="vol-slider" oninput="document.getElementById('vol-label').textContent=this.value+'%'">
+        <span class="vol-label" id="vol-label">50%</span>
+      </div>
+      <div style="margin-top:.75rem">
+        <input type="range" class="vol-slider" id="vol-slider2" min="0" max="100" value="50" onchange="musicCmd('volume',this.value)" style="width:100%">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label"><span class="dot"></span> 🔍 Search & Play</div>
+      <div class="music-search">
+        <input id="music-search-input" type="text" placeholder="Song, artist, or vibe...">
+        <button class="btn btn-accent btn-sm" onclick="playSearch()">Play</button>
+      </div>
+      <div style="margin-top:1rem">
+        <div class="card-label" style="margin-bottom:.5rem"><span class="dot"></span> Quick Play</div>
+        <div style="display:flex;flex-wrap:wrap;gap:.4rem" id="quick-play-btns">
+          <button class="btn btn-ghost btn-sm" onclick="sendCommand('play Drake')">Drake</button>
+          <button class="btn btn-ghost btn-sm" onclick="sendCommand('play DMX')">DMX</button>
+          <button class="btn btn-ghost btn-sm" onclick="sendCommand('play Prince')">Prince</button>
+          <button class="btn btn-ghost btn-sm" onclick="sendCommand('play Slippin')">Slippin'</button>
+          <button class="btn btn-ghost btn-sm" onclick="sendCommand('play Come Together')">Come Together</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card span2">
+      <div class="card-label"><span class="dot dot-purple"></span> 🎛 Volume Control</div>
+      <div style="display:flex;align-items:center;gap:1rem">
+        <span style="font-size:.8rem;color:var(--muted2);font-family:var(--mono)">0%</span>
+        <input class="vol-slider" type="range" min="0" max="100" value="50" id="vol-main"
+          onchange="musicCmd('volume',this.value);document.getElementById('vol-main-label').textContent=this.value+'%'"
+          oninput="document.getElementById('vol-main-label').textContent=this.value+'%'" style="flex:1">
+        <span style="font-size:.8rem;color:var(--muted2);font-family:var(--mono)">100%</span>
+        <span class="vol-label" id="vol-main-label" style="font-size:1.1rem;color:var(--accent);min-width:45px">50%</span>
+      </div>
+      <div style="display:flex;gap:.5rem;margin-top:.75rem">
+        <button class="btn btn-ghost btn-sm" onclick="musicCmd('volume',25);setVolDisplay(25)">25%</button>
+        <button class="btn btn-ghost btn-sm" onclick="musicCmd('volume',50);setVolDisplay(50)">50%</button>
+        <button class="btn btn-ghost btn-sm" onclick="musicCmd('volume',75);setVolDisplay(75)">75%</button>
+        <button class="btn btn-ghost btn-sm" onclick="musicCmd('volume',100);setVolDisplay(100)">100%</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- TAB: INTEL -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-intel">
+  <div class="grid g3" style="padding-top:1rem">
+
+    <div class="card">
+      <div class="card-label"><span class="dot"></span> 🌤 Weather — Rockford, IL</div>
+      <div class="weather-temp" id="w-temp2">--°F</div>
+      <div class="weather-desc" id="w-desc2">Loading...</div>
+      <div class="weather-meta" id="w-meta2"></div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:1rem" onclick="loadWeather()">Refresh</button>
+    </div>
+
+    <div class="card">
+      <div class="card-label"><span class="dot dot-yellow"></span> 📈 Market Spotlight</div>
+      <div class="stock-sym" id="s-sym2">--</div>
+      <div class="stock-price" id="s-price2">$--.--</div>
+      <div class="stock-pct" id="s-pct2">--%</div>
+    </div>
+
+    <div class="card">
+      <div class="card-label"><span class="dot dot-green"></span> ✨ Today's Affirmation</div>
+      <div id="aff-text" style="font-size:.9rem;line-height:1.7;font-weight:600;color:var(--green)">Loading...</div>
+      <div style="margin-top:.75rem">
+        <div class="card-label" style="margin-bottom:.3rem"><span class="dot dot-red"></span> 🔥 Stop Procrastinating</div>
+        <div id="nudge-text" style="font-size:.82rem;line-height:1.6;color:var(--text)">Loading...</div>
+      </div>
+    </div>
+
+    <div class="card span3">
+      <div class="card-label"><span class="dot dot-purple"></span> 📰 Top Headlines</div>
+      <div id="news-list">Loading...</div>
+    </div>
+
+    <div class="card span3">
+      <div class="card-label"><span class="dot"></span> ⚡ Daily Briefing</div>
+      <div id="briefing-content" style="color:var(--muted2);font-size:.85rem">
+        <button class="btn btn-ghost btn-sm" onclick="loadBriefing()">Load Full Briefing</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- TAB: ANALYTICS -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab-analytics">
+  <div class="grid g3" style="padding-top:1rem">
+
+    <div class="card">
+      <div class="card-label"><span class="dot"></span> ⏰ Peak Activity Hours</div>
+      <div id="peak-chart" class="bar-chart"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label"><span class="dot dot-purple"></span> 📊 Your Patterns</div>
+      <div id="pattern-stats"></div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:.75rem" onclick="loadPatterns()">Refresh</button>
+    </div>
+
+    <div class="card">
+      <div class="card-label"><span class="dot dot-green"></span> 🎭 Detected Scenes</div>
+      <div id="scene-list" style="color:var(--muted2);font-size:.82rem">Loading...</div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:.75rem" onclick="sendCommand('learn my scenes')">Auto-Learn Scenes</button>
+    </div>
+
+    <div class="card span3">
+      <div class="card-label"><span class="dot dot-yellow"></span> 📅 Weekly Report</div>
+      <div id="weekly-report" style="color:var(--muted2);font-size:.85rem">
+        <button class="btn btn-ghost btn-sm" onclick="loadWeeklyReport()">Load Weekly Report</button>
+      </div>
+    </div>
+
+    <div class="card span2">
+      <div class="card-label"><span class="dot"></span> 🕘 Command History</div>
+      <div id="history-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-label"><span class="dot dot-red"></span> 📈 Stock Alerts</div>
+      <div id="stock-alerts-list" style="color:var(--muted2);font-size:.82rem">Loading...</div>
+      <div style="display:flex;flex-direction:column;gap:.4rem;margin-top:.75rem">
+        <div style="display:flex;gap:.4rem">
+          <input class="log-input" id="alert-sym" placeholder="NVDA" style="width:70px;font-size:.78rem">
+          <select class="log-input" id="alert-type" style="width:90px;font-size:.78rem">
+            <option value="above">above</option>
+            <option value="below">below</option>
+            <option value="change">change%</option>
+          </select>
+          <input class="log-input" id="alert-target" type="number" placeholder="150" style="flex:1;font-size:.78rem">
+          <button class="btn btn-ghost btn-sm" onclick="addStockAlert()">Add</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /app -->
+
 <script>
 // ── Clock ─────────────────────────────────────────────────────────────────────
-function updateClock() {
-  const now = new Date();
-  const h = now.getHours(); const m = now.getMinutes();
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  const hh = (h % 12 || 12).toString().padStart(2,'0');
-  const mm = m.toString().padStart(2,'0');
-  document.getElementById('clock').textContent = `${hh}:${mm} ${ampm}`;
-  document.getElementById('date-str').textContent = now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+function updateClock(){
+  const n=new Date();
+  const h=n.getHours(),m=n.getMinutes();
+  document.getElementById('clock').textContent=`${(h%12||12).toString().padStart(2,'0')}:${m.toString().padStart(2,'0')} ${h>=12?'PM':'AM'}`;
+  document.getElementById('date-str').textContent=n.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
 }
-updateClock(); setInterval(updateClock, 1000);
+updateClock();setInterval(updateClock,1000);
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function switchTab(name,btn){
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  // Lazy-load tab data
+  if(name==='ironmind') loadIronMindTab();
+  if(name==='analytics') loadAnalyticsTab();
+  if(name==='intel' && !intelLoaded) loadIntelTab();
+  if(name==='lights') loadScenes();
+}
+let intelLoaded=false;
 
 // ── Colors ────────────────────────────────────────────────────────────────────
-const COLORS = [
-  {name:'red',    css:'#ff4d4d'},  {name:'orange', css:'#ff8c42'},
-  {name:'yellow', css:'#ffd60a'}, {name:'green',  css:'#00ff88'},
-  {name:'cyan',   css:'#00d4ff'}, {name:'blue',   css:'#3b82f6'},
-  {name:'purple', css:'#7c3aed'}, {name:'pink',   css:'#f472b6'},
-  {name:'white',  css:'#f1f5f9'}, {name:'warm',   css:'#ffa84c'},
-  {name:'off',    css:'#1e2d45'},
+const COLORS=[
+  {n:'red',c:'#ff4d4d'},{n:'orange',c:'#ff8c42'},{n:'yellow',c:'#ffd60a'},
+  {n:'green',c:'#00ff88'},{n:'cyan',c:'#00d4ff'},{n:'blue',c:'#3b82f6'},
+  {n:'purple',c:'#7c3aed'},{n:'pink',c:'#f472b6'},{n:'white',c:'#f1f5f9'},
+  {n:'warm',c:'#ffa84c'},{n:'off',c:'#1e2d45'},
 ];
-let activeColor = null;
-
-function buildColorGrid() {
-  const grid = document.getElementById('color-grid');
-  COLORS.forEach(c => {
-    const btn = document.createElement('button');
-    btn.className = 'color-btn';
-    btn.style.background = c.css;
-    btn.title = c.name;
-    btn.dataset.color = c.name;
-    btn.onclick = () => sendCommand(`lights ${c.name}`);
-    grid.appendChild(btn);
-  });
+function buildColorGrid(){
+  document.getElementById('color-grid').innerHTML=COLORS.map(c=>`
+    <button class="color-btn" style="background:${c.c}" data-color="${c.n}" title="${c.n}"
+      onclick="sendLightColor('${c.n}')"></button>`).join('');
 }
 buildColorGrid();
 
-function setActiveColor(color) {
-  document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-  const btn = document.querySelector(`.color-btn[data-color="${color}"]`);
-  if (btn) btn.classList.add('active');
-  const c = COLORS.find(x => x.name === color);
-  const swatch = document.querySelector('.light-swatch');
-  if (swatch && c) swatch.style.background = c.css;
-  document.getElementById('light-status').textContent = `Current: ${color}`;
+function setActiveColor(color){
+  document.querySelectorAll('.color-btn').forEach(b=>b.classList.remove('active'));
+  const b=document.querySelector(`.color-btn[data-color="${color}"]`);
+  if(b)b.classList.add('active');
+  document.getElementById('lights-current-color').textContent=color;
 }
+
+function sendLightColor(color){
+  const bri=document.getElementById('bri-slider')?.value||200;
+  sendCommand(`lights ${color} brightness ${bri}`);
+}
+function applyBrightness(){
+  const bri=document.getElementById('bri-slider').value;
+  const col=document.getElementById('lights-current-color').textContent||'white';
+  sendCommand(`lights ${col} brightness ${bri}`);
+}
+document.getElementById('bri-slider').oninput=function(){
+  document.getElementById('bri-label').textContent=this.value;
+};
 
 // ── Send command ──────────────────────────────────────────────────────────────
-let isPlaying = false;
-
-async function sendCommand(text) {
-  if (!text.trim()) return;
-  document.getElementById('cmd-input').value = '';
-  addFeedItem(text, '<span class="spinner"></span>', '');
-
-  try {
-    const res = await fetch('/command', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({text})
-    });
-    const data = await res.json();
-    updateFeedLast(data.result || 'Done');
-
-    // Update UI based on action
-    const action = data.action;
-    if (action === 'lights') setActiveColor(data.intent?.color || 'white');
-    if (action === 'music') { refreshStatus(); }
-    if (action === 'briefing') parseBriefing(data.result);
-    if (action === 'multi') {
-      (data.intent?.commands || []).forEach(cmd => {
-        if (cmd.action === 'lights' || cmd.type === 'lights') setActiveColor(cmd.color || 'white');
-      });
-      setTimeout(refreshStatus, 1000);
-    }
+let isPlaying=false;
+async function sendCommand(text){
+  if(!text.trim())return;
+  document.getElementById('cmd-input').value='';
+  addFeedItem(text,'<span class="spinner"></span>','');
+  try{
+    const res=await fetch('/command',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+    const d=await res.json();
+    updateFeedLast(d.result||'Done');
+    const a=d.action;
+    if(a==='lights')setActiveColor(d.intent?.color||'white');
+    if(a==='music'||a==='multi')setTimeout(refreshStatus,500);
+    if(a==='briefing')parseBriefing(d.result);
+    if(a==='multi')(d.intent?.commands||[]).forEach(c=>{if(c.action==='lights')setActiveColor(c.color||'white')});
     refreshHistory();
-  } catch(e) {
-    updateFeedLast('Error: ' + e.message);
-  }
+  }catch(e){updateFeedLast('Error: '+e.message)}
 }
-
-document.getElementById('send-btn').onclick = () => {
-  const val = document.getElementById('cmd-input').value.trim();
-  if (val) sendCommand(val);
-};
-document.getElementById('cmd-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    const val = e.target.value.trim();
-    if (val) sendCommand(val);
-  }
-});
+document.getElementById('send-btn').onclick=()=>{const v=document.getElementById('cmd-input').value.trim();if(v)sendCommand(v)};
+document.getElementById('cmd-input').addEventListener('keydown',e=>{if(e.key==='Enter'){const v=e.target.value.trim();if(v)sendCommand(v)}});
 
 // ── Feed ──────────────────────────────────────────────────────────────────────
-function addFeedItem(input, result, time) {
-  const feed = document.getElementById('feed');
-  const item = document.createElement('div');
-  item.className = 'feed-item';
-  const t = time || new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
-  item.innerHTML = `
-    <span class="feed-input" title="${input}">${input}</span>
-    <span class="feed-result">${result}</span>
-    <span class="feed-time">${t}</span>`;
-  feed.insertBefore(item, feed.firstChild);
-  if (feed.children.length > 20) feed.removeChild(feed.lastChild);
+function addFeedItem(input,result,time){
+  const feed=document.getElementById('feed');
+  const t=time||new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  const item=document.createElement('div');item.className='feed-item';
+  item.innerHTML=`<span class="fi-in" title="${input}">${input}</span><span class="fi-res">${result}</span><span class="fi-time">${t}</span>`;
+  feed.insertBefore(item,feed.firstChild);
+  if(feed.children.length>25)feed.removeChild(feed.lastChild);
 }
-function updateFeedLast(result) {
-  const first = document.getElementById('feed').firstChild;
-  if (first) first.querySelector('.feed-result').innerHTML = result;
-}
+function updateFeedLast(r){const f=document.getElementById('feed').firstChild;if(f)f.querySelector('.fi-res').innerHTML=r}
 
-// ── Music controls — route through /music endpoint ────────────────────────────
-async function musicCmd(cmd, val) {
-  const body = { command: cmd, query: '' };
-  if (val !== undefined) body.volume = parseInt(val);
-  try {
-    const res = await fetch('/music', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(body)
-    });
-    const data = await res.json();
-    addFeedItem(cmd + (val !== undefined ? ' ' + val : ''), data.result, '');
-    if (data.status) updateMusicUI(data.status);
+// ── Music ─────────────────────────────────────────────────────────────────────
+async function musicCmd(cmd,val){
+  const body={command:cmd,query:''};
+  if(val!==undefined)body.volume=parseInt(val);
+  try{
+    const res=await fetch('/music',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await res.json();
+    addFeedItem(cmd+(val!==undefined?' '+val:''),d.result,'');
+    if(d.status)updateMusicUI(d.status);
     refreshHistory();
-  } catch(e) {
-    addFeedItem(cmd, 'Error: ' + e.message, '');
+  }catch(e){addFeedItem(cmd,'Error: '+e.message,'')}
+}
+function togglePlayPause(){musicCmd(isPlaying?'pause':'resume')}
+function playSearch(){
+  const q=document.getElementById('music-search-input').value.trim();
+  if(q){sendCommand('play '+q);document.getElementById('music-search-input').value=''}
+}
+function setVolDisplay(v){
+  document.getElementById('vol-main').value=v;
+  document.getElementById('vol-main-label').textContent=v+'%';
+}
+function updateMusicUI(m){
+  if(!m)return;
+  isPlaying=m.playing;
+  document.getElementById('play-btn').textContent=isPlaying?'⏸':'▶';
+  const box=document.getElementById('music-now');
+  if(isPlaying&&m.track){
+    box.innerHTML=`<div class="music-track">${m.track}</div><div class="music-artist">${m.artist}</div>`;
+  }else if(m.track){
+    box.innerHTML=`<div class="music-track" style="opacity:.5">${m.track}</div><div class="music-artist" style="opacity:.5">${m.artist}</div>`;
+  }else{
+    box.innerHTML='<span style="color:var(--muted2);font-style:italic">Nothing playing</span>';
+  }
+  if(m.volume!==undefined){
+    ['vol-slider','vol-main'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=m.volume});
+    document.getElementById('vol-label').textContent=m.volume+'%';
+    document.getElementById('vol-main-label').textContent=m.volume+'%';
   }
 }
 
-function togglePlayPause() {
-  musicCmd(isPlaying ? 'pause' : 'resume');
-}
-
-document.getElementById('vol-slider').addEventListener('input', function() {
-  document.getElementById('vol-label').textContent = this.value + '%';
-});
-
-// ── Music UI updater ──────────────────────────────────────────────────────────
-function updateMusicUI(music) {
-  isPlaying = music?.playing;
-  document.getElementById('play-pause-btn').textContent = isPlaying ? '⏸' : '▶';
-  const mc = document.getElementById('music-content');
-  if (isPlaying && music.track) {
-    mc.innerHTML = `<div class="music-now">${music.track}</div><div class="music-artist">${music.artist}</div>`;
-  } else if (music.track) {
-    mc.innerHTML = `<div class="music-now" style="opacity:.5">${music.track}</div><div class="music-artist" style="opacity:.5">${music.artist}</div>`;
-  } else {
-    mc.innerHTML = '<div class="music-idle">Nothing playing</div>';
-  }
-  if (music.volume !== undefined) {
-    document.getElementById('vol-slider').value = music.volume;
-    document.getElementById('vol-label').textContent = music.volume + '%';
-  }
-}
-
-// ── Status refresh ────────────────────────────────────────────────────────────
-async function refreshStatus() {
-  try {
-    const s = await fetch('/status').then(r=>r.json());
+// ── Status refresh ─────────────────────────────────────────────────────────────
+async function refreshStatus(){
+  try{
+    const s=await fetch('/status').then(r=>r.json());
     updateMusicUI(s.music);
-    if (s.lights?.color) setActiveColor(s.lights.color);
-  } catch(e) {}
+    if(s.lights?.color)setActiveColor(s.lights.color);
+    if(s.lights?.brightness)document.getElementById('lights-bri').textContent=s.lights.brightness;
+  }catch(e){}
 }
 
 // ── Weather ───────────────────────────────────────────────────────────────────
-async function loadWeather() {
-  try {
-    const d = await fetch('/weather').then(r=>r.json());
-    const txt = d.result || '';
-    const m = txt.match(/(\d+)°F.*feels like (\d+)°F.*humidity (\d+)%/);
-    const desc = txt.match(/🌤 ([^,]+),/);
-    if (m) {
-      document.getElementById('w-temp').textContent = m[1] + '°F';
-      document.getElementById('w-meta').textContent = `Feels like ${m[2]}°F · Humidity ${m[3]}%`;
+async function loadWeather(){
+  try{
+    const d=await fetch('/weather').then(r=>r.json());
+    const txt=d.result||'';
+    const m=txt.match(/(\d+)°F.*feels like (\d+)°F.*humidity (\d+)%/);
+    const desc=txt.match(/🌤 ([^,]+),/);
+    if(m){
+      ['w-temp','w-temp2'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=m[1]+'°F'});
+      ['w-meta','w-meta2'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=`Feels like ${m[2]}°F · Humidity ${m[3]}%`});
     }
-    if (desc) document.getElementById('w-desc').textContent = desc[1];
-  } catch(e) {}
+    if(desc){
+      ['w-desc','w-desc2'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=desc[1]});
+    }
+  }catch(e){}
 }
 
-// ── Briefing parser ───────────────────────────────────────────────────────────
-function parseBriefing(text) {
-  if (!text) return;
-  // Extract affirmation
-  const affMatch = text.match(/DAILY AFFIRMATION[\s\S]*?\n(.*)/);
-  if (affMatch) document.getElementById('aff-text').textContent = affMatch[1].replace(/[*_]/g,'').trim();
-  // Extract nudge
-  const nudgeMatch = text.match(/STOP PROCRASTINATING[\s\S]*?\n(.*)/);
-  if (nudgeMatch) document.getElementById('nudge-text').textContent = nudgeMatch[1].replace(/[*_]/g,'').trim();
-  // Extract headlines
-  const headlines = [];
-  const lines = text.split('\n');
-  let inNews = false;
-  lines.forEach(line => {
-    if (line.includes('TOP HEADLINES')) inNews = true;
-    else if (inNews && /^\d+\./.test(line.trim())) headlines.push(line.replace(/^\d+\.\s*/,'').trim());
-    else if (inNews && line.trim() === '') inNews = false;
+// ── Briefing ──────────────────────────────────────────────────────────────────
+function parseBriefing(text){
+  if(!text)return;
+  const affM=text.match(/DAILY AFFIRMATION[\s\S]*?\n(.*)/);
+  if(affM)document.getElementById('aff-text').textContent=affM[1].replace(/[*_\\]/g,'').trim();
+  const nudgeM=text.match(/STOP PROCRASTINATING[\s\S]*?\n(.*)/);
+  if(nudgeM)document.getElementById('nudge-text').textContent=nudgeM[1].replace(/[*_\\]/g,'').trim();
+  const headlines=[];let inNews=false;
+  text.split('\n').forEach(line=>{
+    if(line.includes('TOP HEADLINES'))inNews=true;
+    else if(inNews&&/^\d+\./.test(line.trim()))headlines.push(line.replace(/^\d+\.\s*/,'').replace(/\\./g,'.').trim());
+    else if(inNews&&line.trim()==='')inNews=false;
   });
-  if (headlines.length) renderNews(headlines);
-  // Extract stock
-  const stockMatch = text.match(/MARKET SPOTLIGHT[\s\S]*?\n([^\n]+)\n([^\n]+)/);
-  if (stockMatch) {
-    const sym = stockMatch[1].replace(/[*_]/g,'').trim();
-    const priceMatch = stockMatch[2].match(/\$([0-9.]+)/);
-    const pctMatch = stockMatch[2].match(/([▲▼]).*?([0-9.]+)%/);
-    if (sym) document.getElementById('s-sym').textContent = sym;
-    if (priceMatch) document.getElementById('s-price').textContent = '$' + priceMatch[1];
-    if (pctMatch) {
-      const el = document.getElementById('s-pct');
-      el.textContent = pctMatch[1] + pctMatch[2] + '%';
-      el.className = 'stock-pct ' + (pctMatch[1] === '▲' ? 'gain' : 'loss');
-    }
+  if(headlines.length)renderNews(headlines);
+  // Parse stock from briefing
+  const sM=text.match(/MARKET SPOTLIGHT[\s\S]*?\n([A-Z]+).*\$([0-9.]+)[\s\S]*?([▲▼])([0-9.]+)%/);
+  if(sM){
+    ['s-sym','s-sym2'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=sM[1]});
+    ['s-price','s-price2'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='$'+sM[2]});
+    ['s-pct','s-pct2'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el){el.textContent=sM[3]+sM[4]+'%';el.className='stock-pct '+(sM[3]==='▲'?'gain':'loss')}
+    });
   }
 }
-
-function renderNews(headlines) {
-  const list = document.getElementById('news-list');
-  list.innerHTML = headlines.map(h => `<div class="news-item">${h}</div>`).join('');
+function renderNews(headlines){
+  ['news-list'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.innerHTML=headlines.map(h=>`<div class="news-item">${h}</div>`).join('');
+  });
+}
+async function loadBriefing(){
+  document.getElementById('briefing-content').innerHTML='<span class="spinner"></span> Loading briefing...';
+  try{
+    const d=await fetch('/briefing').then(r=>r.json());
+    const txt=(d.result||'').replace(/\\./g,'.').replace(/\\!/g,'!').replace(/\\-/g,'-').replace(/\\'/g,"'");
+    parseBriefing(d.result||'');
+    document.getElementById('briefing-content').innerHTML=`<pre style="font-size:.78rem;white-space:pre-wrap;line-height:1.7;color:var(--text)">${txt}</pre>`;
+    intelLoaded=true;
+  }catch(e){document.getElementById('briefing-content').textContent='Error loading briefing'}
+}
+async function loadIntelTab(){
+  await loadWeather();
+  await loadBriefing();
 }
 
 // ── History ───────────────────────────────────────────────────────────────────
-async function refreshHistory() {
-  try {
-    const hist = await fetch('/history').then(r=>r.json());
-    const list = document.getElementById('history-list');
-    list.innerHTML = hist.slice(0,15).map(h => `
+async function refreshHistory(){
+  try{
+    const hist=await fetch('/history').then(r=>r.json());
+    const list=document.getElementById('history-list');
+    if(list)list.innerHTML=hist.slice(0,20).map(h=>`
       <div class="hist-item">
         <span class="hist-in" title="${h.input}">${h.input}</span>
         <span class="hist-action">${h.action}</span>
       </div>`).join('');
-  } catch(e) {}
+  }catch(e){}
 }
 
-// ── Voice (Web Speech API) ────────────────────────────────────────────────────
-let recognition = null;
-let isListening = false;
-
-function initVoice() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    document.getElementById('voice-status').textContent = 'Voice not supported in this browser. Use Chrome.';
-    return;
-  }
-
-  recognition = new SpeechRecognition();
-  recognition.continuous = false;
-  recognition.interimResults = true;
-  recognition.lang = 'en-US';
-
-  recognition.onstart = () => {
-    isListening = true;
-    document.getElementById('voice-btn').classList.add('listening');
-    document.getElementById('voice-status').textContent = '🔴 Listening...';
-    document.getElementById('voice-status').className = 'voice-status active';
-  };
-
-  recognition.onresult = (e) => {
-    let interim = '', final = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      if (e.results[i].isFinal) final += e.results[i][0].transcript;
-      else interim += e.results[i][0].transcript;
-    }
-    const text = final || interim;
-    document.getElementById('cmd-input').value = text;
-    if (final) {
-      document.getElementById('voice-status').textContent = `✓ Heard: "${final}"`;
-      document.getElementById('voice-status').className = 'voice-status';
-      sendCommand(final);
-    } else {
-      document.getElementById('voice-status').textContent = `Hearing: "${interim}"`;
-    }
-  };
-
-  recognition.onerror = (e) => {
-    document.getElementById('voice-btn').classList.remove('listening');
-    document.getElementById('voice-status').textContent = `Voice error: ${e.error}`;
-    document.getElementById('voice-status').className = 'voice-status';
-    isListening = false;
-  };
-
-  recognition.onend = () => {
-    isListening = false;
-    document.getElementById('voice-btn').classList.remove('listening');
-    if (document.getElementById('voice-status').textContent.startsWith('🔴')) {
-      document.getElementById('voice-status').textContent = 'Click 🎙 to speak a command';
-      document.getElementById('voice-status').className = 'voice-status';
-    }
-  };
+// ── IronMind ──────────────────────────────────────────────────────────────────
+async function loadIronMindTab(){
+  await Promise.all([loadImPlan(),loadImLog(),loadImStreaks(),loadImIdentity()]);
 }
 
-document.getElementById('voice-btn').addEventListener('click', () => {
-  if (!recognition) { initVoice(); }
-  if (isListening) {
-    recognition.stop();
-  } else {
-    recognition.start();
-  }
+async function loadImPlan(){
+  try{
+    const d=await fetch('/ironmind/plan').then(r=>r.json());
+    const txt=(d.result||'').replace(/<b>/g,'<strong>').replace(/<\/b>/g,'</strong>').replace(/<i>/g,'<em>').replace(/<\/i>/g,'</em>');
+    document.getElementById('im-plan-content').innerHTML=txt||'<span style="color:var(--muted2)">No plan set. Say "set today\'s priorities: X, Y, Z"</span>';
+  }catch(e){}
+}
+
+async function loadImLog(){
+  try{
+    const d=await fetch('/ironmind/log').then(r=>r.json());
+    const txt=d.result||'';
+    // Parse score from result
+    const scoreM=txt.match(/Day score.*?(\d+)\/10/);
+    if(scoreM){
+      const score=parseInt(scoreM[1]);
+      const scoreEl=document.getElementById('im-score-big');
+      const homeScore=document.getElementById('home-im-score');
+      if(scoreEl){scoreEl.textContent=score;scoreEl.style.color=score>=8?'var(--green)':score>=5?'var(--accent)':'var(--red)'}
+      if(homeScore){homeScore.textContent=score;homeScore.style.color=score>=8?'var(--green)':score>=5?'var(--accent)':'var(--red)'}
+    }
+    document.getElementById('im-log-summary').innerHTML=txt.replace(/\n/g,'<br>').replace(/[📊💡🏋️👟🔥🥩💧😴⭐🎭⚖️🍔🍺📈]/g,m=>`<span>${m}</span>`);
+  }catch(e){}
+}
+
+async function loadImStreaks(){
+  try{
+    const streaks=await fetch('/ironmind/streaks').then(r=>r.json());
+    const maxStreak=Math.max(...streaks.map(s=>s.longest||1),1);
+    // Full tab
+    const el=document.getElementById('im-streaks');
+    if(el)el.innerHTML=streaks.map(s=>{
+      const pct=Math.min(100,(s.current/Math.max(s.longest,7))*100);
+      const fire=s.current>=7?'🔥🔥':s.current>=3?'🔥':s.current>0?'⚡':'💀';
+      return`<div class="streak-item">
+        <span class="streak-name">${s.name.replace(/_/g,' ')}</span>
+        <div class="streak-bar-wrap"><div class="streak-bar" style="width:${pct}%"></div></div>
+        <span class="streak-num">${s.current}d</span>
+        <span class="streak-fire">${fire}</span>
+      </div>`;
+    }).join('');
+    // Home snapshot
+    const homeEl=document.getElementById('home-im-streaks');
+    if(homeEl)homeEl.innerHTML=streaks.map(s=>{
+      const fire=s.current>=7?'🔥':s.current>=3?'⚡':s.current>0?'✅':'💀';
+      return`${fire} ${s.name.replace(/_/g,' ')}: <strong>${s.current}d</strong>`;
+    }).join(' &nbsp;·&nbsp; ');
+  }catch(e){}
+}
+
+async function loadImIdentity(){
+  try{
+    const items=await fetch('/ironmind/identity').then(r=>r.json());
+    const el=document.getElementById('im-identity');
+    if(!el)return;
+    if(!items.length){el.innerHTML='<span style="color:var(--muted2);font-size:.82rem">No identity statements yet.</span>';return}
+    el.innerHTML=items.map(i=>`<div class="im-identity-item">${i.statement}</div>`).join('');
+  }catch(e){}
+}
+
+async function loadCoach(){
+  const box=document.getElementById('im-coach-box');
+  box.innerHTML='<span class="spinner"></span> Getting your coaching...';
+  try{
+    const d=await fetch('/ironmind/coach').then(r=>r.json());
+    box.textContent=(d.result||'').replace(/🧠 Coach\n\n/,'');
+  }catch(e){box.textContent='Coach unavailable'}
+}
+
+async function loadJournal(){
+  try{
+    const d=await fetch('/ironmind/journal').then(r=>r.json());
+    const txt=d.result||'';
+    const rightM=txt.match(/What went right.*?\n([\s\S]*?)(?:\n⚠|$)/);
+    const cornerM=txt.match(/Cut corners.*?\n([\s\S]*?)(?:\n🎯|$)/);
+    const tmrwM=txt.match(/Tomorrow.*?\n([\s\S]*?)$/);
+    if(rightM)document.getElementById('j-right').value=rightM[1].trim().replace(/^\s+/,'');
+    if(cornerM)document.getElementById('j-corners').value=cornerM[1].trim().replace(/^\s+/,'');
+    if(tmrwM)document.getElementById('j-tomorrow').value=tmrwM[1].trim().replace(/^\s+/,'');
+    document.getElementById('journal-status').textContent='Loaded.';
+  }catch(e){document.getElementById('journal-status').textContent='Error loading journal'}
+}
+
+async function submitLog(){
+  const metrics={};
+  const workout=document.getElementById('log-workout').checked;
+  const fastfood=document.getElementById('log-fastfood').checked;
+  const alcohol=document.getElementById('log-alcohol').checked;
+  metrics.workout_done=workout?1:0;
+  metrics.fast_food=fastfood?1:0;
+  metrics.alcohol=alcohol?1:0;
+  const fields=[
+    ['log-mood','mood'],['log-sleep','sleep_hours'],['log-sleep-q','sleep_quality'],
+    ['log-protein','protein_g'],['log-water','hydration_oz'],
+    ['log-steps','steps'],['log-weight','weight_lbs']
+  ];
+  fields.forEach(([id,key])=>{
+    const val=document.getElementById(id).value;
+    if(val)metrics[key]=parseFloat(val);
+  });
+  document.getElementById('log-status').textContent='Saving...';
+  try{
+    const res=await fetch('/ironmind/log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({metrics})});
+    const d=await res.json();
+    document.getElementById('log-status').textContent='✓ Saved';
+    setTimeout(()=>document.getElementById('log-status').textContent='',3000);
+    loadImLog();loadImStreaks();
+    addFeedItem('IronMind log',d.result||'Logged','');
+  }catch(e){document.getElementById('log-status').textContent='Error: '+e.message}
+}
+
+async function submitJournal(){
+  const went=document.getElementById('j-right').value.trim();
+  const corners=document.getElementById('j-corners').value.trim();
+  const tmrw=document.getElementById('j-tomorrow').value.trim();
+  const text=`journal went right: ${went}. cut corners: ${corners}. tomorrow: ${tmrw}`;
+  document.getElementById('journal-status').textContent='Saving...';
+  await sendCommand(text);
+  document.getElementById('journal-status').textContent='✓ Saved';
+  setTimeout(()=>document.getElementById('journal-status').textContent='',3000);
+}
+
+async function loadReview(){
+  document.getElementById('im-review').innerHTML='<span class="spinner"></span> Loading...';
+  try{
+    const d=await fetch('/ironmind/review').then(r=>r.json());
+    document.getElementById('im-review').innerHTML=(d.result||'').replace(/\n/g,'<br>');
+  }catch(e){document.getElementById('im-review').textContent='Error loading review'}
+}
+
+async function setTodaysPlan(){
+  const p1=prompt('Priority 1 (non-negotiable):');if(!p1)return;
+  const p2=prompt('Priority 2:');
+  const p3=prompt('Priority 3:');
+  const training=prompt('Training today:');
+  const theme=prompt('Mental theme (discipline, patience, etc.):');
+  let cmd=`set today's priorities: ${p1}`;
+  if(p2)cmd+=`, ${p2}`;
+  if(p3)cmd+=`, ${p3}`;
+  if(training)cmd+=`. Training: ${training}`;
+  if(theme)cmd+=`. Theme: ${theme}`;
+  await sendCommand(cmd);
+  setTimeout(loadImPlan,1500);
+}
+
+async function addIdentity(){
+  const stmt=document.getElementById('identity-input').value.trim();
+  if(!stmt)return;
+  await sendCommand(`add identity: ${stmt}`);
+  document.getElementById('identity-input').value='';
+  setTimeout(loadImIdentity,1000);
+}
+
+// ── Scenes ────────────────────────────────────────────────────────────────────
+async function loadScenes(){
+  try{
+    const scenes=await fetch('/scenes').then(r=>r.json());
+    const el=document.getElementById('lights-scenes');
+    if(!scenes.length){el.innerHTML='<span style="color:var(--muted2)">No scenes yet. Use the command bar to create them, or click "Learn Scenes from History".</span>';return}
+    el.innerHTML=scenes.map(s=>`
+      <div style="display:flex;align-items:center;gap:.5rem;padding:.4rem 0;border-bottom:1px solid var(--border)">
+        <span style="flex:1;font-size:.82rem">${s.name}</span>
+        <span style="font-size:.65rem;color:var(--muted2);font-family:var(--mono)">×${s.times_run}</span>
+        <button class="btn btn-ghost btn-sm" onclick="sendCommand('run ${s.name.toLowerCase()} scene')">Run</button>
+      </div>`).join('');
+    // Also update analytics tab
+    const el2=document.getElementById('scene-list');
+    if(el2)el2.innerHTML=scenes.map(s=>{
+      const auto=s.auto_learned?`<span class="tag tag-blue">auto</span>`:'';
+      return`<div style="padding:.4rem 0;border-bottom:1px solid var(--border);font-size:.82rem;display:flex;align-items:center;gap:.5rem">
+        <span style="flex:1">${s.name}</span>${auto}
+        <span style="font-size:.65rem;color:var(--muted2)">×${s.times_run}</span>
+      </div>`;
+    }).join('');
+  }catch(e){}
+}
+
+// ── Analytics ─────────────────────────────────────────────────────────────────
+async function loadAnalyticsTab(){
+  await Promise.all([loadPatterns(),loadStockAlerts(),refreshHistory(),loadScenes()]);
+}
+
+async function loadPatterns(){
+  try{
+    const m=await fetch('/patterns').then(r=>r.json());
+    if(m.error){document.getElementById('pattern-stats').textContent=m.error;return}
+
+    // Peak hours chart
+    const peaks=m.peak_hours||{};
+    const maxV=Math.max(...Object.values(peaks),1);
+    const peakHours=[6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23];
+    document.getElementById('peak-chart').innerHTML=peakHours.filter(h=>peaks[h]).map(h=>{
+      const pct=Math.round((peaks[h]/maxV)*100);
+      const ampm=`${h%12||12}${h<12?'am':'pm'}`;
+      return`<div class="bar-row">
+        <span class="bar-label">${ampm}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+        <span class="bar-val">${peaks[h]}</span>
+      </div>`;
+    }).join('');
+
+    // Stats
+    const wp=m.weekly_pattern||{};
+    const peakDay=Object.entries(wp).sort((a,b)=>b[1]-a[1])[0]?.[0]||'?';
+    const topColor=m.top_colors?.[0]||['none',0];
+    const topMusic=m.top_music?.[0]||['none',0];
+    const peakHour=Object.entries(peaks).sort((a,b)=>b[1]-a[1])[0]?.[0];
+    const phStr=peakHour?`${peakHour%12||12}${peakHour<12?'am':'pm'}`:'?';
+    document.getElementById('pattern-stats').innerHTML=`
+      <div class="stat-row"><span>Commands analyzed</span><span class="stat-val">${m.history_count}</span></div>
+      <div class="stat-row"><span>Sessions detected</span><span class="stat-val">${m.session_count}</span></div>
+      <div class="stat-row"><span>Peak hour</span><span class="stat-val">${phStr}</span></div>
+      <div class="stat-row"><span>Busiest day</span><span class="stat-val">${peakDay}</span></div>
+      <div class="stat-row"><span>Favorite light</span><span class="stat-val">${topColor[0]}</span></div>
+      <div class="stat-row"><span>Top track</span><span class="stat-val">${(topMusic[0]||'none').slice(0,15)}</span></div>
+      <div class="stat-row"><span>Scene patterns</span><span class="stat-val">${m.scene_candidates?.length||0}</span></div>`;
+  }catch(e){document.getElementById('pattern-stats').textContent='Load error: '+e.message}
+}
+
+async function loadWeeklyReport(){
+  document.getElementById('weekly-report').innerHTML='<span class="spinner"></span> Generating...';
+  try{
+    const d=await fetch('/report').then(r=>r.json());
+    document.getElementById('weekly-report').innerHTML=`<pre style="font-size:.8rem;white-space:pre-wrap;line-height:1.7">${d.result||'No data yet'}</pre>`;
+  }catch(e){document.getElementById('weekly-report').textContent='Error: '+e.message}
+}
+
+async function loadStockAlerts(){
+  try{
+    const alerts=await fetch('/stocks/alerts').then(r=>r.json());
+    const el=document.getElementById('stock-alerts-list');
+    if(!alerts.length){el.innerHTML='<span style="color:var(--muted2)">No alerts set.</span>';return}
+    el.innerHTML=alerts.map(a=>{
+      const triggered=a.triggered?`<span class="tag tag-green">✓</span>`:'';
+      const price=a.current_price?`$${a.current_price.toFixed(2)}`:'';
+      return`<div class="alert-item">
+        <span class="alert-sym">${a.symbol}</span>
+        <span class="alert-cond">${a.type} ${a.target}</span>
+        <span class="alert-price">${price}</span>
+        ${triggered}
+      </div>`;
+    }).join('');
+  }catch(e){}
+}
+
+async function addStockAlert(){
+  const sym=document.getElementById('alert-sym').value.trim().toUpperCase();
+  const type=document.getElementById('alert-type').value;
+  const target=document.getElementById('alert-target').value;
+  if(!sym||!target)return;
+  try{
+    await fetch('/stocks/alerts',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({symbol:sym,type,target:parseFloat(target)})});
+    document.getElementById('alert-sym').value='';
+    document.getElementById('alert-target').value='';
+    loadStockAlerts();
+    addFeedItem('stock alert',`Added: ${sym} ${type} ${target}`,'');
+  }catch(e){}
+}
+
+// ── Voice ─────────────────────────────────────────────────────────────────────
+let recog=null,listening=false;
+function initVoice(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){document.getElementById('voice-status').textContent='Voice not supported (use Chrome)';return}
+  recog=new SR();recog.continuous=false;recog.interimResults=true;recog.lang='en-US';
+  recog.onstart=()=>{listening=true;document.getElementById('voice-btn').classList.add('listening');document.getElementById('voice-status').textContent='🔴 Listening...'};
+  recog.onresult=e=>{
+    let interim='',final='';
+    for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)final+=e.results[i][0].transcript;else interim+=e.results[i][0].transcript}
+    document.getElementById('cmd-input').value=final||interim;
+    if(final){document.getElementById('voice-status').textContent=`✓ "${final}"`;sendCommand(final)}
+    else document.getElementById('voice-status').textContent=`Hearing: "${interim}"`;
+  };
+  recog.onerror=()=>{listening=false;document.getElementById('voice-btn').classList.remove('listening');document.getElementById('voice-status').textContent='Click 🎙 to speak'};
+  recog.onend=()=>{listening=false;document.getElementById('voice-btn').classList.remove('listening')};
+}
+document.getElementById('voice-btn').addEventListener('click',()=>{
+  if(!recog)initVoice();
+  if(listening)recog.stop();else recog.start();
 });
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-async function init() {
+async function init(){
   initVoice();
-  await Promise.all([loadWeather(), refreshStatus(), refreshHistory()]);
-  // Load briefing for affirmation/nudge/news
-  try {
-    const b = await fetch('/briefing').then(r=>r.json());
-    parseBriefing(b.result || '');
-  } catch(e) {}
-  // Poll status every 10s
-  setInterval(refreshStatus, 10000);
-  setInterval(refreshHistory, 30000);
+  await Promise.all([loadWeather(),refreshStatus(),refreshHistory()]);
+  // Load briefing in background for affirmation/nudge
+  fetch('/briefing').then(r=>r.json()).then(d=>parseBriefing(d.result||'')).catch(()=>{});
+  setInterval(refreshStatus,10000);
+  setInterval(refreshHistory,30000);
 }
-
 init();
 </script>
 </body>
