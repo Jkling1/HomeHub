@@ -1256,6 +1256,31 @@ textarea { resize: vertical; min-height: 70px; }
       </div>
     </div>
 
+    <!-- Memory + Calendar row -->
+    <div class="grid-2" style="margin-top:1rem">
+      <div class="card">
+        <div class="card-label" style="display:flex;justify-content:space-between;align-items:center">
+          <span>🧠 Adler's Memory</span>
+          <button class="btn btn-sm" onclick="loadAdlerMemory()">Refresh</button>
+        </div>
+        <div id="adler-memory-stats" style="font-size:.72rem;color:var(--text2);margin:.4rem 0 .6rem"></div>
+        <div id="adler-memory-facts" style="font-family:var(--mono);font-size:.7rem;color:var(--text2);max-height:160px;overflow-y:auto;line-height:1.8"></div>
+        <div style="display:flex;gap:.4rem;margin-top:.6rem">
+          <input type="text" id="adler-fact-input" placeholder="Tell Adler something..." style="flex:1;font-size:.78rem">
+          <button class="btn btn-sm btn-accent" onclick="addAdlerFact()">Remember</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label" style="display:flex;justify-content:space-between;align-items:center">
+          <span>📅 Today's Calendar</span>
+          <button class="btn btn-sm" onclick="loadCalendar()">Refresh</button>
+        </div>
+        <div id="adler-calendar" style="font-family:var(--mono);font-size:.72rem;color:var(--text2);max-height:200px;overflow-y:auto;margin-top:.4rem;line-height:1.8">
+          <span style="color:var(--muted)">Loading...</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Live log -->
     <div class="card" style="margin-top:1rem">
       <div class="card-label" style="display:flex;justify-content:space-between;align-items:center">
@@ -2121,8 +2146,53 @@ function clearAgentLog() {
 const AGENT_NAMES = ['morning','accountability','adaptive','stock','orchestrator'];
 
 async function loadAgents() {
-  await loadAgentStatus();
-  await loadAgentLog();
+  await Promise.all([loadAgentStatus(), loadAgentLog(), loadAdlerMemory(), loadCalendar()]);
+}
+
+async function loadAdlerMemory() {
+  try {
+    const m = await api('/adler/memory');
+    const stats = document.getElementById('adler-memory-stats');
+    const facts = document.getElementById('adler-memory-facts');
+    if (stats) stats.textContent = `${m.mission_count||0} missions · ${(m.facts||[]).length} facts · ${(m.outcomes||[]).length} outcomes · ${(m.patterns||[]).length} patterns`;
+    if (facts) {
+      const items = [
+        ...(m.facts||[]).map(f => `<div>📌 ${f}</div>`),
+        ...(m.patterns||[]).map(p => `<div>🔍 ${p}</div>`),
+        ...(m.notes||[]).map(n => `<div>💡 ${n}</div>`),
+      ];
+      facts.innerHTML = items.length ? items.join('') : '<span style="color:var(--muted)">No memories yet.</span>';
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function addAdlerFact() {
+  const inp = document.getElementById('adler-fact-input');
+  const fact = inp?.value.trim();
+  if (!fact) return;
+  try {
+    await api('/adler/memory/fact', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({fact, category:'fact'})});
+    toast('Adler will remember that', 'success');
+    inp.value = '';
+    loadAdlerMemory();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function loadCalendar() {
+  const el = document.getElementById('adler-calendar');
+  if (!el) return;
+  try {
+    const d = await api('/adler/calendar');
+    if (!d.events || !d.events.length) {
+      el.innerHTML = '<span style="color:var(--muted)">No events today.</span>';
+    } else {
+      el.innerHTML = d.events.map(e =>
+        `<div><span style="color:var(--cyan)">${e.start}–${e.end}</span>  ${e.title}</div>`
+      ).join('');
+    }
+  } catch(e) {
+    el.innerHTML = '<span style="color:var(--muted)">Calendar unavailable (check permissions).</span>';
+  }
 }
 
 async function loadAgentStatus() {

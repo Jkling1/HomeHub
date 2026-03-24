@@ -546,6 +546,36 @@ async def broadcast_event(req_body: BroadcastRequest):
     return {"ok": True, "clients": len(ws_manager.active)}
 
 
+@app.get("/adler/memory")
+async def adler_memory_get():
+    from agents import adler_memory
+    return adler_memory.load()
+
+
+class MemoryFactRequest(BaseModel):
+    fact: str
+    category: str = "fact"
+    context: str = ""
+
+
+@app.post("/adler/memory/fact")
+async def adler_memory_add(req_body: MemoryFactRequest):
+    from agents import adler_memory
+    if req_body.category == "fact":
+        adler_memory.add_fact(req_body.fact)
+    elif req_body.category.startswith("preference_"):
+        cat = req_body.category.replace("preference_", "")
+        adler_memory.update_preference(cat, req_body.context or "general", req_body.fact)
+    return {"ok": True}
+
+
+@app.get("/adler/calendar")
+async def adler_calendar_get():
+    from agents import calendar as adler_cal
+    events = adler_cal.get_today_events()
+    return {"events": events, "formatted": adler_cal.format_for_prompt(events)}
+
+
 @app.get("/", response_class=HTMLResponse)
 async def dashboard():
     return FileResponse(str(SCRIPT_DIR / "static" / "index.html"))

@@ -13,10 +13,11 @@ Usage:
 
 import sys, json
 from agents.base import *
+from agents import adler_memory, calendar as adler_calendar
 
 AGENT = "orchestrator"
 
-MAX_ITERATIONS = 8
+MAX_ITERATIONS = 10
 
 # ── Tool definitions ────────────────────────────────────────────────────────
 TOOLS = [
@@ -98,6 +99,29 @@ TOOLS = [
         "input_schema": {"type": "object", "properties": {}, "required": []},
     },
     {
+        "name": "remember_fact",
+        "description": "Store a fact, preference, or observation about Jordan in long-term memory. Use this when Jordan tells you something explicitly or when you observe something worth remembering.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "fact": {"type": "string", "description": "The fact or observation to remember"},
+                "category": {"type": "string", "enum": ["fact", "preference_lights", "preference_music", "pattern", "note"], "description": "Category of memory"},
+                "context": {"type": "string", "description": "Context key (e.g. 'focus', 'morning') — required for preference categories"},
+            },
+            "required": ["fact", "category"],
+        },
+    },
+    {
+        "name": "recall_memory",
+        "description": "Read Adler's full memory — all known facts, preferences, patterns, and past mission outcomes.",
+        "input_schema": {"type": "object", "properties": {}, "required": []},
+    },
+    {
+        "name": "get_calendar",
+        "description": "Get today's calendar events from Apple Calendar, including upcoming meetings and their times.",
+        "input_schema": {"type": "object", "properties": {}, "required": []},
+    },
+    {
         "name": "mission_complete",
         "description": "Signal that the mission is complete and provide a final summary.",
         "input_schema": {
@@ -110,23 +134,20 @@ TOOLS = [
     },
 ]
 
-SYSTEM_PROMPT = """You are Adler — the autonomous AI brain of Jordan's Smart Hub in Rockford, IL.
-You have tool access to everything: lights, music, IronMind data, weather, stocks, Telegram.
+BASE_SYSTEM = """You are Adler — the autonomous AI brain of Jordan's Smart Hub in Rockford, IL.
+You have tool access to everything: lights, music, IronMind data, weather, stocks, Telegram, calendar, and your own persistent memory.
 
 When given a mission:
-1. Break it down into logical steps
-2. Use tools to gather context first, then act
-3. Make decisions that serve Jordan's wellbeing and goals
-4. After completing all actions, call mission_complete with a concise summary
+1. Read your memory first (recall_memory) if context would help
+2. Check calendar if timing matters
+3. Gather current state, then act decisively
+4. If Jordan tells you something explicitly (a preference, a fact), use remember_fact to store it
+5. Call mission_complete when done with a sharp, specific summary
 
-Jordan's context:
-- He values discipline, performance, and execution
-- He tracks fitness (workout, protein, hydration, sleep, mood)
-- He's building a business and optimizing his daily performance
-- His hub controls Philips Hue lights and Apple Music
-- He's in Rockford, IL
+Memory: You have a persistent memory that grows over missions. Use it. Update it. You get smarter every time.
+Calendar: You know Jordan's schedule. Don't schedule focus music if he has a meeting in 10 minutes.
 
-Be decisive. Don't ask for clarification — reason from context and act."""
+Be decisive. Never ask for clarification — reason from context and act. You know Jordan well."""
 
 
 # ── Tool executor ───────────────────────────────────────────────────────────
@@ -210,6 +231,34 @@ def execute_tool(name: str, inputs: dict) -> str:
             except Exception as e:
                 return f"Stock error: {e}"
 
+        elif name == "remember_fact":
+            fact = inputs["fact"]
+            category = inputs.get("category", "fact")
+            context = inputs.get("context", "")
+            if category == "fact":
+                adler_memory.add_fact(fact)
+            elif category == "pattern":
+                mem = adler_memory.load()
+                mem["patterns"].append(fact)
+                mem["patterns"] = mem["patterns"][-20:]
+                adler_memory.save(mem)
+            elif category == "note":
+                mem = adler_memory.load()
+                mem["notes"].append(fact)
+                mem["notes"] = mem["notes"][-20:]
+                adler_memory.save(mem)
+            elif category.startswith("preference_"):
+                cat = category.replace("preference_", "")
+                adler_memory.update_preference(cat, context or "general", fact)
+            return f"Memory updated: [{category}] {fact}"
+
+        elif name == "recall_memory":
+            mem = adler_memory.load()
+            return adler_memory.format_for_prompt(mem)
+
+        elif name == "get_calendar":
+            return adler_calendar.get_context_string()
+
         elif name == "mission_complete":
             return f"MISSION_COMPLETE: {inputs['summary']}"
 
@@ -222,21 +271,39 @@ def execute_tool(name: str, inputs: dict) -> str:
 
 
 # ── Agent loop ──────────────────────────────────────────────────────────────
+def build_system_prompt() -> str:
+    """Build Adler's full system prompt: base + memory snapshot + calendar."""
+    parts = [BASE_SYSTEM, ""]
+    try:
+        mem = adler_memory.load()
+        parts.append(adler_memory.format_for_prompt(mem))
+    except Exception as e:
+        parts.append(f"[Memory unavailable: {e}]")
+    try:
+        cal = adler_calendar.get_context_string()
+        parts.append("\n" + cal)
+    except Exception as e:
+        parts.append(f"[Calendar unavailable: {e}]")
+    return "\n".join(parts)
+
+
 def run_mission(mission: str, notify_telegram: bool = True) -> str:
     log(AGENT, f"=== Mission: {mission} ===")
 
     if notify_telegram:
         telegram_send(f"🤖 <b>Adler activated</b>\nMission: <i>{mission}</i>")
 
+    system_prompt = build_system_prompt()
     messages = [{"role": "user", "content": mission}]
     final_summary = ""
     iterations = 0
+    tools_used = []
 
     while iterations < MAX_ITERATIONS:
         iterations += 1
         log(AGENT, f"Iteration {iterations}")
 
-        response = claude_tools(messages, TOOLS, system=SYSTEM_PROMPT,
+        response = claude_tools(messages, TOOLS, system=system_prompt,
                                 model="claude-haiku-4-5-20251001", max_tokens=1500)
 
         stop_reason = response.get("stop_reason")
@@ -270,6 +337,7 @@ def run_mission(mission: str, notify_telegram: bool = True) -> str:
             tool_use_id = block["id"]
 
             result = execute_tool(tool_name, tool_inputs)
+            tools_used.append(tool_name)
             log(AGENT, f"  → {result[:100]}")
 
             tool_results.append({
@@ -291,10 +359,16 @@ def run_mission(mission: str, notify_telegram: bool = True) -> str:
     log(AGENT, f"=== Mission complete after {iterations} iterations ===")
     log(AGENT, f"Summary: {final_summary}")
 
+    # Record to Adler's memory
+    try:
+        adler_memory.record_mission(mission, final_summary, tools_used)
+    except Exception as e:
+        log(AGENT, f"Memory record error: {e}")
+
     if notify_telegram and final_summary:
         telegram_send(
             f"✅ <b>Mission complete</b>\n\n{final_summary}\n\n"
-            f"<i>{iterations} steps taken</i>"
+            f"<i>{iterations} steps · {len(tools_used)} tool calls</i>"
         )
 
     return final_summary
