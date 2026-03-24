@@ -34,6 +34,12 @@ PLISTS = {
         "interval": 300,  # every 5 min
         "label": "Stock Intelligence (every 5 min)",
     },
+    "com.jordan.agent.music_mood": {
+        "program": PYTHON,
+        "args": [str(ROOT / "run_agent.py"), "music_mood"],
+        "interval": 15,  # every 15 seconds
+        "label": "Music Mood Lighting (every 15s)",
+    },
 }
 
 def make_plist(plist_id: str, config: dict) -> str:

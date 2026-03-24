@@ -510,7 +510,7 @@ async def run_agent(req_body: AgentRunRequest):
     if agent == "orchestrator" and not mission:
         raise HTTPException(400, "Orchestrator requires a mission")
 
-    valid = {"morning", "accountability", "adaptive", "stock", "orchestrator"}
+    valid = {"morning", "accountability", "adaptive", "stock", "orchestrator", "music_mood"}
     if agent not in valid:
         raise HTTPException(400, f"Unknown agent: {agent}")
 
