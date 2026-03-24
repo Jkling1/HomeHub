@@ -196,6 +196,8 @@ body::before {
 .dot-violet { background: var(--violet); box-shadow: 0 0 6px var(--violet); }
 .dot-green  { background: var(--green);  box-shadow: 0 0 6px var(--green); }
 .dot-orange { background: var(--orange); box-shadow: 0 0 6px var(--orange); }
+.dot-cyan   { background: var(--cyan);   box-shadow: 0 0 6px var(--cyan); }
+.dot-dim    { background: var(--muted);  box-shadow: none; }
 
 /* ══════════════════════════════════════════════════════════
    SKELETON LOADER
@@ -833,6 +835,9 @@ textarea { resize: vertical; min-height: 70px; }
     <button class="nav-item" onclick="switchPanel('analytics',this)">
       <span class="nav-icon">📊</span><span class="nav-label">Analytics</span>
     </button>
+    <button class="nav-item" onclick="switchPanel('agents',this)">
+      <span class="nav-icon">🤖</span><span class="nav-label">Agents</span>
+    </button>
   </div>
 </nav>
 
@@ -1207,6 +1212,62 @@ textarea { resize: vertical; min-height: 70px; }
     </div>
   </div>
 
+  <!-- ── AGENTS ── -->
+  <div class="panel" id="panel-agents">
+    <div class="page-header">
+      <h2>Autonomous Agents</h2>
+      <span class="page-sub">5 agents · Adler's Brain active</span>
+    </div>
+    <div class="grid-2">
+      <!-- Agent cards -->
+      <div class="card" id="agent-card-morning">
+        <div class="card-label"><span class="dot dot-orange" id="dot-morning"></span> Morning Protocol</div>
+        <div style="font-size:.75rem;color:var(--text2);margin:.3rem 0 .75rem">7:00 AM daily — sunrise lights, motivational brief, music</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-bottom:.75rem" id="status-morning">Last run: —</div>
+        <button class="btn btn-sm btn-accent" onclick="runAgent('morning')">▶ Run Now</button>
+      </div>
+      <div class="card" id="agent-card-accountability">
+        <div class="card-label"><span class="dot dot-violet" id="dot-accountability"></span> Accountability Loop</div>
+        <div style="font-size:.75rem;color:var(--text2);margin:.3rem 0 .75rem">Hourly — checks metrics at 11am, 2pm, 6pm, 9pm</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-bottom:.75rem" id="status-accountability">Last run: —</div>
+        <button class="btn btn-sm btn-accent" onclick="runAgent('accountability')">▶ Run Now</button>
+      </div>
+      <div class="card" id="agent-card-adaptive">
+        <div class="card-label"><span class="dot dot-green" id="dot-adaptive"></span> Adaptive Engine</div>
+        <div style="font-size:.75rem;color:var(--text2);margin:.3rem 0 .75rem">Every 15 min — reads signals, adjusts lights/music/sends nudges</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-bottom:.75rem" id="status-adaptive">Last run: —</div>
+        <button class="btn btn-sm btn-accent" onclick="runAgent('adaptive')">▶ Run Now</button>
+      </div>
+      <div class="card" id="agent-card-stock">
+        <div class="card-label"><span class="dot dot-orange" id="dot-stock"></span> Stock Intelligence</div>
+        <div style="font-size:.75rem;color:var(--text2);margin:.3rem 0 .75rem">Every 5 min — monitors alerts, sends context with each trigger</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-bottom:.75rem" id="status-stock">Last run: —</div>
+        <button class="btn btn-sm btn-accent" onclick="runAgent('stock')">▶ Run Now</button>
+      </div>
+    </div>
+
+    <!-- Adler Orchestrator -->
+    <div class="card" style="margin-top:1rem">
+      <div class="card-label"><span class="dot dot-cyan" id="dot-orchestrator"></span> Adler — Orchestrator</div>
+      <div style="font-size:.75rem;color:var(--text2);margin:.3rem 0 .75rem">On-demand — give Adler a mission in natural language. He reasons, uses tools, and reports back via Telegram.</div>
+      <div style="display:flex;gap:.5rem">
+        <input type="text" id="adler-mission" placeholder="deep work mode, optimize my evening, check everything and report..." style="flex:1">
+        <button class="btn btn-accent" onclick="runAdler()">Launch Mission</button>
+      </div>
+    </div>
+
+    <!-- Live log -->
+    <div class="card" style="margin-top:1rem">
+      <div class="card-label" style="display:flex;justify-content:space-between;align-items:center">
+        <span><span class="dot dot-green" id="dot-ws"></span> Agent Log — Live</span>
+        <button class="btn btn-sm" onclick="clearAgentLog()">Clear</button>
+      </div>
+      <div id="agent-log" style="font-family:var(--mono);font-size:.72rem;color:var(--text2);max-height:320px;overflow-y:auto;background:var(--bg);border-radius:8px;padding:.75rem;margin-top:.5rem;line-height:1.7">
+        <span style="color:var(--muted)">Waiting for agent activity...</span>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /main -->
 
 <!-- ═══════════════════════════════════════════════════════
@@ -1295,11 +1356,12 @@ function switchPanel(id, btn) {
 }
 
 function loadPanel(id) {
-  if (id === 'ironmind') loadIronMind();
-  if (id === 'lights')   loadLights();
-  if (id === 'music')    loadMusicStatus();
-  if (id === 'intel')    loadIntel();
-  if (id === 'analytics'){ loadAnalytics(); loadStockAlerts(); loadHistory(); }
+  if (id === 'ironmind')  loadIronMind();
+  if (id === 'lights')    loadLights();
+  if (id === 'music')     loadMusicStatus();
+  if (id === 'intel')     loadIntel();
+  if (id === 'analytics') { loadAnalytics(); loadStockAlerts(); loadHistory(); }
+  if (id === 'agents')    loadAgents();
 }
 
 /* ── Toast ── */
@@ -1330,7 +1392,7 @@ async function sendCommand(text) {
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({text})
     });
-    addFeedItem(d.action||'ok', d.result, true);
+    // WS broadcasts the result — only update state here, don't double-add to feed
     if (d.action==='lights') syncLightState(d.intent);
     if (d.action==='music')  syncMusicState();
     return d;
@@ -1349,12 +1411,12 @@ document.getElementById('cmd-input').addEventListener('keydown', e => {
 });
 
 /* ── Feed ── */
-function addFeedItem(action, result, isNew=false) {
+function addFeedItem(action, result, ts=null) {
   const feed = document.getElementById('feed');
   const item = document.createElement('div');
-  item.className = 'feed-item' + (isNew?' new':'');
-  const now = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
-  item.innerHTML = `<div class="feed-action">${action}</div><div class="feed-result">${result}</div><div class="feed-time">${now}</div>`;
+  item.className = 'feed-item new';
+  const time = ts || new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true});
+  item.innerHTML = `<div class="feed-action">${action}</div><div class="feed-result">${(result||'').slice(0,120)}</div><div class="feed-time">${time}</div>`;
   feed.prepend(item);
   while (feed.children.length > 15) feed.removeChild(feed.lastChild);
 }
@@ -1980,6 +2042,162 @@ async function loadFeedHistory() {
   } catch {}
 }
 
+/* ══════════════════════════════════════════════════════════
+   WEBSOCKET — Live push from server
+══════════════════════════════════════════════════════════ */
+let ws, wsReconnectTimer;
+
+function connectWS() {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${proto}://${location.host}/ws`);
+
+  ws.onopen = () => {
+    document.getElementById('dot-ws')?.classList.replace('dot-dim', 'dot-green');
+    console.log('[WS] connected');
+    // ping every 20s to keep alive
+    wsReconnectTimer = setInterval(() => { if (ws.readyState === 1) ws.send('ping'); }, 20000);
+  };
+
+  ws.onmessage = (e) => {
+    try {
+      const msg = JSON.parse(e.data);
+      handleWSMessage(msg);
+    } catch {}
+  };
+
+  ws.onclose = () => {
+    document.getElementById('dot-ws')?.classList.replace('dot-green', 'dot-dim');
+    clearInterval(wsReconnectTimer);
+    // Auto-reconnect after 3s
+    setTimeout(connectWS, 3000);
+  };
+}
+
+function handleWSMessage(msg) {
+  const { type } = msg;
+
+  if (type === 'command') {
+    // Push to live feed
+    addFeedItem(msg.action || 'cmd', msg.result || '', msg.ts);
+    // Also append to agent log if on agents panel
+    appendAgentLog(`[cmd] ${msg.action}: ${(msg.result||'').slice(0,100)}`);
+  }
+
+  if (type === 'status' || type === 'music') {
+    if (msg.music) updateMusicUI(msg.music);
+    if (msg.lights) updateLightUI(msg.lights);
+  }
+
+  if (type === 'agent') {
+    appendAgentLog(msg.message || JSON.stringify(msg));
+    toast(msg.message || 'Agent event', 'info');
+  }
+
+  if (type === 'agent_done') {
+    appendAgentLog(`✅ ${msg.agent || 'Agent'}: ${msg.summary || 'complete'}`);
+    loadAgentStatus();
+  }
+}
+
+function appendAgentLog(line) {
+  const el = document.getElementById('agent-log');
+  if (!el) return;
+  if (el.querySelector('[style*="Waiting"]')) el.innerHTML = '';
+  const ts = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const div = document.createElement('div');
+  div.innerHTML = `<span style="color:var(--muted)">${ts}</span>  ${line}`;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+function clearAgentLog() {
+  const el = document.getElementById('agent-log');
+  if (el) el.innerHTML = '<span style="color:var(--muted)">Log cleared.</span>';
+}
+
+/* ══════════════════════════════════════════════════════════
+   AGENTS TAB
+══════════════════════════════════════════════════════════ */
+const AGENT_NAMES = ['morning','accountability','adaptive','stock','orchestrator'];
+
+async function loadAgents() {
+  await loadAgentStatus();
+  await loadAgentLog();
+}
+
+async function loadAgentStatus() {
+  try {
+    const d = await api('/agents/status');
+    const state = d.state || {};
+    AGENT_NAMES.forEach(name => {
+      const key = Object.keys(state).find(k => k.startsWith(name));
+      const el = document.getElementById('status-' + name);
+      const dot = document.getElementById('dot-' + name);
+      if (key && state[key]) {
+        const ts = new Date(state[key] * 1000);
+        const ago = Math.round((Date.now() - ts)/60000);
+        if (el) el.textContent = `Last run: ${ago < 1 ? 'just now' : ago + 'm ago'}`;
+        if (dot) { dot.className = 'dot dot-green'; }
+      } else {
+        if (dot) dot.className = 'dot dot-orange';
+      }
+    });
+  } catch {}
+}
+
+async function loadAgentLog() {
+  try {
+    const d = await api('/agents/log');
+    const el = document.getElementById('agent-log');
+    if (!el) return;
+    const lines = (d.lines || []).slice(-60);
+    if (!lines.length) { el.innerHTML = '<span style="color:var(--muted)">No agent activity yet.</span>'; return; }
+    el.innerHTML = lines.map(l => `<div>${l}</div>`).join('');
+    el.scrollTop = el.scrollHeight;
+  } catch {}
+}
+
+async function runAgent(name) {
+  const btn = document.querySelector(`#agent-card-${name} button`);
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Running...'; }
+  appendAgentLog(`▶ Launching ${name} agent...`);
+  try {
+    await api('/agents/run', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({agent: name})
+    });
+    toast(`${name} agent started`, 'success');
+    setTimeout(() => loadAgentStatus(), 3000);
+  } catch(e) {
+    toast(e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '▶ Run Now'; }
+  }
+}
+
+async function runAdler() {
+  const inp = document.getElementById('adler-mission');
+  const mission = inp?.value.trim();
+  if (!mission) { toast('Enter a mission for Adler', 'error'); return; }
+  const btn = document.querySelector('#panel-agents .btn-accent:last-child');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Launching...'; }
+  appendAgentLog(`🤖 Adler mission: "${mission}"`);
+  try {
+    await api('/agents/run', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({agent: 'orchestrator', mission})
+    });
+    toast('Adler launched — report incoming on Telegram', 'success');
+    if (inp) inp.value = '';
+  } catch(e) {
+    toast(e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Launch Mission'; }
+  }
+}
+
 /* ── Init: load home panel data ── */
 (async () => {
   try {
@@ -1990,6 +2208,7 @@ async function loadFeedHistory() {
   loadWeather();
   loadAffirmation();
   loadFeedHistory();
+  connectWS();
 })();
 
 // Set Chart.js global defaults

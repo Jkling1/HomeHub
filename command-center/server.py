@@ -7,13 +7,15 @@ Dashboard: http://localhost:8888
 
 import os
 import json
+import asyncio
 import subprocess
 import requests as req
 from pathlib import Path
 from datetime import datetime
+from typing import Set
 import apple_music
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel
@@ -38,6 +40,29 @@ init_db()
 
 app = FastAPI(title="Jordan Smart Hub")
 app.mount("/static", StaticFiles(directory=str(SCRIPT_DIR / "static")), name="static")
+
+# ── WebSocket broadcast manager ───────────────────────────────────────────────
+class ConnectionManager:
+    def __init__(self):
+        self.active: Set[WebSocket] = set()
+
+    async def connect(self, ws: WebSocket):
+        await ws.accept()
+        self.active.add(ws)
+
+    def disconnect(self, ws: WebSocket):
+        self.active.discard(ws)
+
+    async def broadcast(self, data: dict):
+        dead = set()
+        for ws in self.active:
+            try:
+                await ws.send_json(data)
+            except Exception:
+                dead.add(ws)
+        self.active -= dead
+
+ws_manager = ConnectionManager()
 
 # ── Intent parser ─────────────────────────────────────────────────────────────
 SYSTEM_PROMPT = """You are the AI brain of Jordan's Smart Hub — a personal home automation assistant for Jordan in Rockford, IL.
@@ -217,6 +242,16 @@ class CommandRequest(BaseModel):
     text: str
 
 
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await ws_manager.connect(websocket)
+    try:
+        while True:
+            await websocket.receive_text()  # keep alive; client pings
+    except WebSocketDisconnect:
+        ws_manager.disconnect(websocket)
+
+
 @app.post("/command")
 async def handle_command(req_body: CommandRequest):
     text = req_body.text.strip()
@@ -226,6 +261,8 @@ async def handle_command(req_body: CommandRequest):
         intent = parse_intent(text)
         result = execute_cmd(intent)
         log_command(text, intent.get("action","?"), result)
+        payload = {"type": "command", "action": intent.get("action"), "result": result, "input": text, "ts": datetime.now().strftime("%H:%M")}
+        asyncio.create_task(ws_manager.broadcast(payload))
         return {"ok": True, "action": intent.get("action"), "result": result, "intent": intent}
     except Exception as e:
         log_command(text, "error", str(e), False)
@@ -240,12 +277,14 @@ async def get_status():
     except Exception:
         music = get_music_state()
 
-    return {
+    status = {
         "lights": get_light_state(),
         "music":  music,
         "time":   datetime.now().strftime("%I:%M %p"),
         "date":   datetime.now().strftime("%A, %B %d"),
     }
+    asyncio.create_task(ws_manager.broadcast({"type": "status", **status}))
+    return status
 
 
 class MusicRequest(BaseModel):
@@ -262,7 +301,9 @@ async def music_endpoint(req_body: MusicRequest):
         cmd["volume"] = req_body.volume
     result = exec_music(cmd)
     log_command(f"{req_body.command} {req_body.query}".strip(), "music", result)
-    return {"ok": True, "result": result, "status": apple_music.get_status()}
+    status = apple_music.get_status()
+    asyncio.create_task(ws_manager.broadcast({"type": "music", "result": result, "status": status}))
+    return {"ok": True, "result": result, "status": status}
 
 
 @app.get("/weather")
@@ -491,6 +532,18 @@ async def agents_log():
         return {"lines": []}
     lines = log_file.read_text().splitlines()
     return {"lines": lines[-100:]}
+
+
+class BroadcastRequest(BaseModel):
+    type: str = "agent"
+    data: dict = {}
+
+
+@app.post("/broadcast")
+async def broadcast_event(req_body: BroadcastRequest):
+    """Agents call this to push events to connected dashboard clients."""
+    await ws_manager.broadcast({"type": req_body.type, **req_body.data})
+    return {"ok": True, "clients": len(ws_manager.active)}
 
 
 @app.get("/", response_class=HTMLResponse)
