@@ -636,6 +636,161 @@ textarea { resize: vertical; min-height: 70px; }
 .page-header { margin-bottom: 1.1rem; }
 .page-header h2 { font-size: 1.1rem; font-weight: 700; }
 .page-header p  { font-size: .8rem; color: var(--text2); margin-top: .2rem; }
+
+/* ══════════════════════════════════════════════════════════
+   EXPANDABLE CHAT
+══════════════════════════════════════════════════════════ */
+#feed-card {
+  cursor: pointer;
+  transition: transform .1s ease, box-shadow .1s ease;
+  user-select: none;
+}
+#feed-card:hover { box-shadow: 0 0 0 1px rgba(0,212,255,.15), 0 8px 32px rgba(0,0,0,.3); }
+.feed-expand-hint {
+  font-size: .62rem; color: var(--muted); font-family: var(--mono);
+  margin-top: .6rem; letter-spacing: .05em; opacity: .7;
+}
+
+/* Backdrop */
+#chat-backdrop {
+  position: fixed; inset: 0; z-index: 490;
+  background: rgba(7,8,15,0);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  transition: background .35s ease, backdrop-filter .35s ease;
+  pointer-events: none;
+}
+#chat-backdrop.active {
+  background: rgba(7,8,15,.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: auto;
+}
+
+/* Chat modal — starts at card position via inline style, expands */
+#chat-modal {
+  position: fixed; z-index: 500;
+  display: none; flex-direction: column;
+  background: var(--bg2);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,.3);
+  /* FLIP starting transform set via JS */
+  will-change: transform, border-radius;
+}
+
+#chat-modal.phase1 {
+  transform: scale(1.03);
+  box-shadow: 0 20px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(0,212,255,.1);
+}
+
+#chat-modal.phase2 {
+  transition:
+    top    .38s cubic-bezier(0.22,1,0.36,1),
+    left   .38s cubic-bezier(0.22,1,0.36,1),
+    width  .38s cubic-bezier(0.22,1,0.36,1),
+    height .38s cubic-bezier(0.22,1,0.36,1),
+    border-radius .38s cubic-bezier(0.22,1,0.36,1),
+    box-shadow .38s ease,
+    transform .38s cubic-bezier(0.22,1,0.36,1);
+}
+
+#chat-modal.expanded {
+  top: 0 !important; left: 0 !important;
+  width: 100% !important; height: 100% !important;
+  border-radius: 0 !important;
+  border: none;
+  box-shadow: none;
+  transform: scale(1) !important;
+}
+
+/* Glass morph flash during expand */
+#chat-modal.morphing::after {
+  content: '';
+  position: absolute; inset: 0; z-index: 10;
+  background: rgba(0,212,255,.04);
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  pointer-events: none;
+  animation: glass-flash .35s ease forwards;
+}
+@keyframes glass-flash {
+  0%   { opacity: 1; }
+  60%  { opacity: .6; }
+  100% { opacity: 0; }
+}
+
+/* Chat modal inner */
+.chat-header {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .9rem 1.2rem;
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+  opacity: 0; transform: translateY(-8px);
+  transition: opacity .2s ease .25s, transform .2s ease .25s;
+}
+#chat-modal.expanded .chat-header { opacity: 1; transform: none; }
+
+.chat-back {
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1px solid var(--glass-border); background: var(--bg4);
+  color: var(--text2); cursor: pointer; font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.chat-back:hover { background: var(--bg5); color: var(--text); }
+.chat-header-title { font-family: var(--mono); font-size: .85rem; font-weight: 600; }
+.chat-header-sub   { font-size: .68rem; color: var(--muted); margin-left: auto; }
+
+.chat-messages {
+  flex: 1; overflow-y: auto; padding: 1rem 1.2rem;
+  display: flex; flex-direction: column; gap: .5rem;
+}
+
+.chat-msg {
+  display: flex; gap: .75rem; align-items: flex-start;
+  opacity: 0; transform: translateY(10px);
+  animation: msg-in .25s ease forwards;
+}
+@keyframes msg-in {
+  to { opacity: 1; transform: none; }
+}
+
+.chat-msg-badge {
+  flex-shrink: 0; padding: .2rem .45rem; border-radius: 6px;
+  font-family: var(--mono); font-size: .62rem; font-weight: 700;
+  background: var(--bg5); color: var(--cyan);
+  margin-top: 2px; white-space: nowrap;
+}
+.chat-msg-badge.lights  { color: var(--yellow); }
+.chat-msg-badge.music   { color: var(--violet); }
+.chat-msg-badge.chat    { color: var(--green); }
+.chat-msg-badge.briefing{ color: var(--orange); }
+.chat-msg-body { flex: 1; }
+.chat-msg-text {
+  font-size: .83rem; line-height: 1.55; color: var(--text2);
+  background: var(--bg4); border-radius: 10px;
+  padding: .55rem .8rem;
+  border: 1px solid var(--glass-border);
+}
+.chat-msg-meta { font-size: .65rem; color: var(--muted); margin-top: .3rem; padding-left: .2rem; }
+
+.chat-input-bar {
+  padding: .75rem 1rem;
+  border-top: 1px solid var(--glass-border);
+  display: flex; gap: .5rem; flex-shrink: 0;
+  background: var(--bg2);
+  opacity: 0; transform: translateY(8px);
+  transition: opacity .2s ease .3s, transform .2s ease .3s;
+}
+#chat-modal.expanded .chat-input-bar { opacity: 1; transform: none; }
+.chat-input-bar input {
+  flex: 1; background: var(--bg4); border: 1px solid var(--glass-border);
+  border-radius: 999px; padding: .55rem 1rem;
+  font-size: .85rem; color: var(--text);
+}
+.chat-input-bar input:focus { outline: none; border-color: rgba(0,212,255,.4); }
 </style>
 </head>
 <body>
@@ -752,8 +907,8 @@ textarea { resize: vertical; min-height: 70px; }
         </div>
       </div>
 
-      <!-- Live feed (span 2) -->
-      <div class="card span2">
+      <!-- Live feed (span 2) — click to expand -->
+      <div class="card span2" id="feed-card" onclick="expandChat()" title="Click to expand">
         <div class="card-label"><span class="dot dot-green"></span> Live Feed</div>
         <div class="feed" id="feed">
           <div class="feed-item">
@@ -762,6 +917,7 @@ textarea { resize: vertical; min-height: 70px; }
             <div class="feed-time">Now</div>
           </div>
         </div>
+        <div class="feed-expand-hint">↗ tap to expand</div>
       </div>
     </div>
   </div>
@@ -1064,6 +1220,23 @@ textarea { resize: vertical; min-height: 70px; }
   <div class="cmd-actions">
     <button class="cmd-mic" id="voice-btn" title="Voice input">🎙</button>
     <button class="cmd-send" id="send-btn">Send</button>
+  </div>
+</div>
+
+<!-- Chat backdrop -->
+<div id="chat-backdrop" onclick="collapseChat()"></div>
+
+<!-- Expandable chat modal -->
+<div id="chat-modal" role="dialog" aria-modal="true">
+  <div class="chat-header">
+    <button class="chat-back" onclick="collapseChat()" title="Back">←</button>
+    <span class="chat-header-title">Live Feed</span>
+    <span class="chat-header-sub" id="chat-msg-count">—</span>
+  </div>
+  <div class="chat-messages" id="chat-messages"></div>
+  <div class="chat-input-bar">
+    <input type="text" id="chat-input" placeholder="Send a command..." autocomplete="off">
+    <button class="cmd-send" onclick="chatSend()" style="border-radius:999px;height:36px;padding:0 1rem">Send</button>
   </div>
 </div>
 
@@ -1824,6 +1997,195 @@ if (typeof Chart !== 'undefined') {
   Chart.defaults.color = '#4a5568';
   Chart.defaults.font.family = "'Inter', sans-serif";
 }
+
+/* ══════════════════════════════════════════════════════════
+   EXPANDABLE CHAT — FLIP ANIMATION
+══════════════════════════════════════════════════════════ */
+let chatOpen = false;
+
+async function expandChat() {
+  if (chatOpen) return;
+  chatOpen = true;
+
+  const card   = document.getElementById('feed-card');
+  const modal  = document.getElementById('chat-modal');
+  const backdrop = document.getElementById('chat-backdrop');
+
+  // ── Record First (card's current position) ──────────────
+  const rect = card.getBoundingClientRect();
+
+  // ── Set modal to card's exact position ──────────────────
+  modal.style.cssText = `
+    display:flex;
+    top:${rect.top}px;
+    left:${rect.left}px;
+    width:${rect.width}px;
+    height:${rect.height}px;
+    border-radius:16px;
+    transform:scale(1);
+  `;
+
+  // Populate chat messages before animating
+  await loadChatMessages();
+
+  // Force reflow so CSS reads the starting position
+  modal.getBoundingClientRect();
+
+  // ── Phase 1 (0–100ms): Focus — scale up, shadow deepens ──
+  modal.classList.add('phase1');
+  backdrop.classList.add('active');
+
+  await delay(100);
+
+  // ── Phase 2 (100–480ms): Expand to fullscreen ────────────
+  modal.classList.remove('phase1');
+  modal.classList.add('phase2', 'morphing');
+
+  // Trigger transition to fullscreen (Last state)
+  requestAnimationFrame(() => {
+    modal.classList.add('expanded');
+  });
+
+  // ── Phase 3 (200–400ms): Content fades in ───────────────
+  await delay(200);
+  animateMessages();
+
+  // Remove glass morph after it fades
+  await delay(400);
+  modal.classList.remove('morphing');
+
+  // Hide floating command bar
+  document.querySelector('.cmd-float').style.opacity = '0';
+  document.querySelector('.cmd-float').style.pointerEvents = 'none';
+
+  // Focus the chat input
+  document.getElementById('chat-input').focus();
+}
+
+async function collapseChat() {
+  if (!chatOpen) return;
+  const modal    = document.getElementById('chat-modal');
+  const backdrop = document.getElementById('chat-backdrop');
+  const card     = document.getElementById('feed-card');
+
+  // Record card's current position for reverse animation
+  const rect = card.getBoundingClientRect();
+
+  // Remove expanded so we can set target position
+  modal.classList.remove('expanded', 'morphing');
+
+  // Animate back to card position
+  requestAnimationFrame(() => {
+    modal.style.top    = rect.top    + 'px';
+    modal.style.left   = rect.left   + 'px';
+    modal.style.width  = rect.width  + 'px';
+    modal.style.height = rect.height + 'px';
+    modal.style.borderRadius = '16px';
+    modal.style.transform = 'scale(1)';
+  });
+
+  backdrop.classList.remove('active');
+
+  // Restore floating command bar
+  document.querySelector('.cmd-float').style.opacity = '';
+  document.querySelector('.cmd-float').style.pointerEvents = '';
+
+  await delay(400);
+  modal.style.display = 'none';
+  modal.classList.remove('phase2');
+  chatOpen = false;
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function loadChatMessages() {
+  const container = document.getElementById('chat-messages');
+  const countEl   = document.getElementById('chat-msg-count');
+  container.innerHTML = '';
+
+  try {
+    const rows = await api('/history');
+    const msgs = rows.slice(0, 40).reverse();
+    if (countEl) countEl.textContent = `${msgs.length} commands`;
+
+    msgs.forEach((r, i) => {
+      const div = document.createElement('div');
+      div.className = 'chat-msg';
+      div.style.animationDelay = `${i * 30}ms`;
+
+      const action = r.action || 'cmd';
+      const badgeClass = ['lights','music','chat','briefing'].includes(action) ? action : '';
+      const time = (r.ts || '').replace('T',' ').slice(0,16);
+
+      div.innerHTML = `
+        <div class="chat-msg-badge ${badgeClass}">${action}</div>
+        <div class="chat-msg-body">
+          <div class="chat-msg-text">${(r.result || r.input || '').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>
+          <div class="chat-msg-meta">
+            <span style="color:var(--text2)">${(r.input||'').slice(0,60)}</span>
+            <span style="margin-left:.5rem">${time}</span>
+          </div>
+        </div>`;
+      container.appendChild(div);
+    });
+
+    // Scroll to bottom
+    container.scrollTop = container.scrollHeight;
+  } catch(e) {
+    container.innerHTML = '<div style="color:var(--muted);padding:1rem">No history yet.</div>';
+  }
+}
+
+function animateMessages() {
+  // Messages stagger in — already handled by animationDelay on each .chat-msg
+  // Just ensure they're visible (opacity animation handled by CSS @keyframes msg-in)
+  const msgs = document.querySelectorAll('#chat-messages .chat-msg');
+  msgs.forEach(m => { m.style.opacity = ''; }); // let CSS take over
+}
+
+async function chatSend() {
+  const inp = document.getElementById('chat-input');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+
+  // Optimistic: add to chat UI
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg';
+  div.innerHTML = `
+    <div class="chat-msg-badge">→</div>
+    <div class="chat-msg-body">
+      <div class="chat-msg-text" style="color:var(--cyan)">${text}</div>
+      <div class="chat-msg-meta">Sending...</div>
+    </div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+
+  try {
+    const d = await sendCommand(text);
+    // Replace with real result
+    div.querySelector('.chat-msg-badge').textContent = d?.action || 'ok';
+    div.querySelector('.chat-msg-badge').className = 'chat-msg-badge ' + (d?.action||'');
+    div.querySelector('.chat-msg-text').innerHTML = (d?.result || '').replace(/\n/g,'<br>');
+    div.querySelector('.chat-msg-text').style.color = '';
+    div.querySelector('.chat-msg-meta').textContent = 'Just now';
+  } catch(e) {
+    div.querySelector('.chat-msg-text').style.color = 'var(--red)';
+    div.querySelector('.chat-msg-text').textContent = e.message;
+  }
+  container.scrollTop = container.scrollHeight;
+}
+
+// Close on Escape key
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && chatOpen) collapseChat();
+});
+
+// Enter key in chat input
+document.getElementById('chat-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') chatSend();
+});
 </script>
 </body>
 </html>
