@@ -1785,6 +1785,28 @@ document.getElementById('voice-btn').onclick = () => {
   else { btn.classList.add('recording'); recognition.start(); }
 };
 
+/* ── Feed: populate from history on load ── */
+async function loadFeedHistory() {
+  try {
+    const rows = await api('/history');
+    const feed = document.getElementById('feed');
+    if (!feed) return;
+    feed.innerHTML = ''; // clear hardcoded item
+    const recent = rows.slice(0, 10).reverse();
+    if (!recent.length) {
+      feed.innerHTML = '<div class="feed-item"><div class="feed-action">sys</div><div class="feed-result">Hub online. Ready.</div><div class="feed-time">Now</div></div>';
+      return;
+    }
+    recent.forEach(r => {
+      const item = document.createElement('div');
+      item.className = 'feed-item';
+      const time = (r.ts || '').split(' ')[1]?.slice(0,5) || '';
+      item.innerHTML = `<div class="feed-action">${r.action||'cmd'}</div><div class="feed-result">${(r.result||'').slice(0,120)}</div><div class="feed-time">${time}</div>`;
+      feed.appendChild(item);
+    });
+  } catch {}
+}
+
 /* ── Init: load home panel data ── */
 (async () => {
   try {
@@ -1794,6 +1816,7 @@ document.getElementById('voice-btn').onclick = () => {
   } catch {}
   loadWeather();
   loadAffirmation();
+  loadFeedHistory();
 })();
 
 // Set Chart.js global defaults
