@@ -40,6 +40,12 @@ PLISTS = {
         "interval": 15,  # every 15 seconds
         "label": "Music Mood Lighting (every 15s)",
     },
+    "com.jordan.agent.evolve": {
+        "program": PYTHON,
+        "args": [str(ROOT / "run_agent.py"), "evolve"],
+        "hour": 5, "minute": 0,
+        "label": "EVOLVE Protocol (5:00 AM daily)",
+    },
 }
 
 def make_plist(plist_id: str, config: dict) -> str:

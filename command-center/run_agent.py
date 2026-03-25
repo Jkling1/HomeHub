@@ -28,6 +28,9 @@ def main():
     elif agent == "music_mood":
         from agents.music_mood import run
         run()
+    elif agent == "evolve":
+        from agents.evolve import run
+        run()
     else:
         print(f"Unknown agent: {agent}")
         sys.exit(1)
