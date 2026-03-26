@@ -1041,15 +1041,166 @@ textarea { resize: vertical; min-height: 70px; }
    ROCK SYSTEM
 ══════════════════════════════════════════════════════════ */
 
-/* Category color map */
-.rock[data-cat="training"]  { --rock-color: var(--cyan);   --rock-glow: rgba(0,212,255,.25); }
-.rock[data-cat="nutrition"] { --rock-color: var(--green);  --rock-glow: rgba(0,255,136,.25); }
-.rock[data-cat="recovery"]  { --rock-color: var(--violet); --rock-glow: rgba(124,58,237,.25); }
-.rock[data-cat="mental"]    { --rock-color: var(--orange); --rock-glow: rgba(255,140,66,.25); }
+/* ── Rock category colors ── */
+.rock[data-cat="training"]  { --rock-color: var(--cyan);   --rock-glow: rgba(0,212,255,.3); }
+.rock[data-cat="nutrition"] { --rock-color: var(--green);  --rock-glow: rgba(0,255,136,.3); }
+.rock[data-cat="recovery"]  { --rock-color: var(--violet); --rock-glow: rgba(124,58,237,.3); }
+.rock[data-cat="mental"]    { --rock-color: var(--orange); --rock-glow: rgba(255,140,66,.3); }
 
+/* ── Rocks page header ── */
+.rocks-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.rocks-header-left { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.rocks-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -.02em;
+}
+.rocks-date-nav {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  background: var(--bg3);
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  padding: .3rem .5rem;
+}
+.rocks-nav-btn {
+  background: none;
+  border: none;
+  color: var(--text2);
+  font-size: 1.1rem;
+  cursor: pointer;
+  width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  transition: background .15s, color .15s;
+}
+.rocks-nav-btn:hover { background: var(--bg4); color: var(--cyan); }
+.rocks-date-txt {
+  font-family: var(--mono);
+  font-size: .78rem;
+  color: var(--text);
+  min-width: 155px;
+  text-align: center;
+}
+.rocks-today-btn {
+  background: none;
+  border: 1px solid var(--glass-border);
+  color: var(--muted);
+  font-size: .65rem;
+  font-family: var(--mono);
+  border-radius: 999px;
+  padding: .2rem .6rem;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.rocks-today-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* ── Progress ring ── */
+.rocks-header-right { flex-shrink: 0; }
+.rocks-ring-wrap {
+  position: relative;
+  width: 52px; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+}
+.rocks-ring-svg { width: 52px; height: 52px; position: absolute; inset: 0; }
+.rocks-ring-txt {
+  font-family: var(--mono);
+  font-size: .62rem;
+  font-weight: 700;
+  color: var(--text);
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Pyramid stage ── */
+.rocks-stage {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 1.25rem;
+  padding: 2rem 1rem 1.75rem;
+  border: 1px solid rgba(255,255,255,.06);
+}
+.rocks-stage-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 0%, rgba(0,212,255,.06), transparent),
+    radial-gradient(ellipse 80% 40% at 50% 100%, rgba(124,58,237,.05), transparent),
+    var(--bg2);
+}
+.rocks-pyramid {
+  position: relative; z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+.rocks-row-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  position: relative;
+  padding-bottom: .5rem;
+}
+.rocks-row-label {
+  font-size: .55rem;
+  font-family: var(--mono);
+  letter-spacing: .14em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: .75rem;
+}
+.rocks-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.rocks-row-medium { gap: .9rem; }
+.rocks-row-small  { gap: .65rem; }
+
+.rocks-row-divider {
+  width: 1px;
+  height: 28px;
+  background: linear-gradient(to bottom, rgba(255,255,255,.06), transparent);
+  margin: .1rem 0 .1rem;
+}
+
+/* ── Add FAB ── */
+.rocks-add-fab {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.05);
+  border: 1px dashed rgba(255,255,255,.15);
+  color: var(--muted);
+  font-size: .9rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, border-color .15s, color .15s;
+  line-height: 1;
+}
+.rocks-add-fab:hover { background: rgba(0,212,255,.1); border-color: var(--cyan); color: var(--cyan); }
+.rocks-add-sm { width: 22px; height: 22px; font-size: .75rem; }
+
+/* ── Rock bubbles ── */
 .rock {
   --rock-color: var(--cyan);
-  --rock-glow:  rgba(0,212,255,.2);
+  --rock-glow:  rgba(0,212,255,.25);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -1058,126 +1209,158 @@ textarea { resize: vertical; min-height: 70px; }
   border-radius: 50%;
   cursor: pointer;
   user-select: none;
-  background: rgba(255,255,255,.03);
-  border: 1.5px solid rgba(255,255,255,.08);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  transition: transform .18s cubic-bezier(.34,1.56,.64,1),
+  background: rgba(255,255,255,.04);
+  border: 1.5px solid rgba(255,255,255,.1);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  transition: transform .2s cubic-bezier(.34,1.56,.64,1),
               box-shadow .2s ease,
               border-color .2s ease,
-              background .2s ease;
+              background .25s ease;
   text-align: center;
   padding: .4rem;
   overflow: hidden;
 }
+/* Liquid glass shine */
 .rock::before {
   content: '';
   position: absolute;
-  top: -30%; left: -30%;
-  width: 60%; height: 40%;
-  background: rgba(255,255,255,.06);
+  top: 6%; left: 12%;
+  width: 55%; height: 32%;
+  background: rgba(255,255,255,.09);
   border-radius: 50%;
-  transform: rotate(-30deg);
+  transform: rotate(-20deg);
   pointer-events: none;
-  transition: opacity .2s;
 }
 .rock:hover {
-  transform: scale(1.07);
+  transform: scale(1.08);
   border-color: var(--rock-color);
-  box-shadow: 0 0 0 1px var(--rock-color), 0 8px 28px var(--rock-glow);
+  box-shadow: 0 0 0 1.5px var(--rock-color), 0 10px 32px var(--rock-glow);
 }
 .rock.complete {
-  background: linear-gradient(135deg, rgba(var(--rock-color-rgb),.18), rgba(var(--rock-color-rgb),.08));
   border-color: var(--rock-color);
-  box-shadow: 0 0 0 1px var(--rock-color), 0 6px 24px var(--rock-glow), inset 0 0 20px rgba(255,255,255,.03);
+  background: rgba(255,255,255,.07);
+  box-shadow: 0 0 0 1.5px var(--rock-color), 0 8px 28px var(--rock-glow),
+              inset 0 0 24px rgba(255,255,255,.03);
 }
 
 /* Sizes */
-.rock-big    { width: 148px; height: 148px; }
-.rock-medium { width:  96px; height:  96px; }
+.rock-big    { width: 152px; height: 152px; }
+.rock-medium { width:  98px; height:  98px; }
 .rock-small  { width:  64px; height:  64px; }
 
-/* Text inside rocks */
-.rock-label-big    { font-size: .78rem; font-weight: 700; line-height: 1.3; color: var(--text); padding: 0 .6rem; }
-.rock-label-medium { font-size: .66rem; font-weight: 600; line-height: 1.3; color: var(--text); padding: 0 .4rem; }
-.rock-label-small  { font-size: .55rem; font-weight: 600; line-height: 1.2; color: var(--text2); padding: 0 .3rem; }
+/* Text */
+.rock-label-big    { font-size: .8rem;  font-weight: 700; line-height: 1.35; color: var(--text);  padding: 0 .7rem; }
+.rock-label-medium { font-size: .68rem; font-weight: 600; line-height: 1.3;  color: var(--text);  padding: 0 .45rem; }
+.rock-label-small  { font-size: .55rem; font-weight: 600; line-height: 1.2;  color: var(--text2); padding: 0 .3rem; }
 
-.rock-cat-icon { font-size: 1.1rem; margin-bottom: .15rem; }
-.rock-big    .rock-cat-icon { font-size: 1.45rem; margin-bottom: .3rem; }
-.rock-small  .rock-cat-icon { font-size: .8rem; margin-bottom: .1rem; }
+.rock-cat-icon       { font-size: 1.15rem; margin-bottom: .18rem; }
+.rock-big   .rock-cat-icon { font-size: 1.5rem;  margin-bottom: .32rem; }
+.rock-small .rock-cat-icon { font-size: .82rem;  margin-bottom: .08rem; }
 
+/* Checkmark badge */
 .rock-check {
   position: absolute;
-  bottom: 8px; right: 8px;
-  width: 18px; height: 18px;
+  bottom: 9px; right: 9px;
+  width: 20px; height: 20px;
   border-radius: 50%;
   background: var(--rock-color);
   color: #000;
-  font-size: .62rem;
+  font-size: .65rem;
   display: flex; align-items: center; justify-content: center;
   font-weight: 900;
   opacity: 0;
-  transition: opacity .2s;
+  transform: scale(0);
+  transition: opacity .2s, transform .2s cubic-bezier(.34,1.56,.64,1);
 }
-.rock-big .rock-check { width: 24px; height: 24px; font-size: .75rem; bottom: 10px; right: 10px; }
-.rock.complete .rock-check { opacity: 1; }
+.rock-big .rock-check { width: 26px; height: 26px; font-size: .78rem; bottom: 11px; right: 11px; }
+.rock.complete .rock-check { opacity: 1; transform: scale(1); }
 
+/* Delete X */
 .rock-delete {
   position: absolute;
-  top: 3px; right: 3px;
-  width: 16px; height: 16px;
+  top: 4px; right: 4px;
+  width: 17px; height: 17px;
   border-radius: 50%;
-  background: rgba(255,77,109,.7);
+  background: rgba(255,77,109,.75);
   color: #fff;
-  font-size: .5rem;
+  font-size: .52rem;
   display: none; align-items: center; justify-content: center;
   cursor: pointer;
   z-index: 2;
   line-height: 1;
+  transition: transform .1s;
 }
+.rock-delete:hover { transform: scale(1.15); }
 .rock:hover .rock-delete { display: flex; }
 
-/* Big Rock — pulse when incomplete */
+/* Big Rock — ambient pulse when incomplete */
 @keyframes rock-pulse {
-  0%, 100% { box-shadow: 0 0 0 1px rgba(0,212,255,.2), 0 0 20px rgba(0,212,255,.06); }
-  50%       { box-shadow: 0 0 0 2px rgba(0,212,255,.35), 0 0 36px rgba(0,212,255,.14); }
+  0%, 100% { box-shadow: 0 0 0 1px rgba(0,212,255,.15), 0 0 18px rgba(0,212,255,.05); }
+  50%       { box-shadow: 0 0 0 2px rgba(0,212,255,.3),  0 0 38px rgba(0,212,255,.12); }
 }
-.rock-big:not(.complete) { animation: rock-pulse 3s ease-in-out infinite; }
+.rock-big:not(.complete) { animation: rock-pulse 3.5s ease-in-out infinite; }
 .rock-big.complete        { animation: none; }
 
 /* Completion burst */
 @keyframes rock-burst {
   0%   { transform: scale(1); }
-  40%  { transform: scale(1.18); }
-  70%  { transform: scale(.96); }
+  40%  { transform: scale(1.2); }
+  70%  { transform: scale(.95); }
   100% { transform: scale(1); }
 }
-.rock.rock-completing { animation: rock-burst .45s cubic-bezier(.34,1.56,.64,1) forwards; }
+.rock.rock-completing { animation: rock-burst .42s cubic-bezier(.34,1.56,.64,1) forwards; }
 
-/* Week strip */
+/* ── Week strip ── */
+.rocks-week-card {
+  background: var(--bg2);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+}
+.rocks-week-label {
+  font-size: .55rem;
+  font-family: var(--mono);
+  letter-spacing: .14em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: .75rem;
+}
+.rocks-week-strip {
+  display: flex;
+  gap: .5rem;
+}
 .week-day-chip {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: .2rem;
+  gap: .35rem;
   flex: 1;
-  min-width: 48px;
-  padding: .5rem .2rem;
-  border-radius: 10px;
-  background: var(--bg4);
+  min-width: 42px;
+  padding: .6rem .2rem;
+  border-radius: 12px;
+  background: var(--bg3);
   border: 1px solid var(--glass-border);
-  cursor: default;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
 }
+.week-day-chip:hover { border-color: rgba(0,212,255,.2); background: var(--bg4); }
 .week-day-chip.is-today {
-  border-color: var(--cyan);
-  background: rgba(0,212,255,.06);
+  border-color: rgba(0,212,255,.35);
+  background: rgba(0,212,255,.05);
 }
-.week-day-chip .wdc-label  { font-size: .58rem; color: var(--muted); font-family: var(--mono); }
-.week-day-chip .wdc-big    { width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--cyan); }
-.week-day-chip .wdc-big.done { background: var(--cyan); }
-.week-day-chip .wdc-score  { font-size: .58rem; font-family: var(--mono); color: var(--text2); }
+.week-day-chip .wdc-label { font-size: .57rem; color: var(--muted); font-family: var(--mono); letter-spacing: .04em; }
+.week-day-chip .wdc-date  { font-size: .52rem; color: var(--muted); font-family: var(--mono); }
+.week-day-chip .wdc-big   {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0,212,255,.3);
+  transition: background .2s;
+}
+.week-day-chip .wdc-big.done { background: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 6px rgba(0,212,255,.5); }
+.week-day-chip .wdc-score { font-size: .57rem; font-family: var(--mono); color: var(--text2); font-weight: 600; }
 
-/* rock-cat-btn active state */
+/* rock-cat-btn active */
 .rock-cat-btn.active { border-color: var(--cyan); color: var(--cyan); background: rgba(0,212,255,.08); }
 
 /* ══════════════════════════════════════════════════════════
@@ -2007,52 +2190,76 @@ textarea { resize: vertical; min-height: 70px; }
 
   <!-- ── ROCKS ── -->
   <div class="panel" id="panel-rocks">
-    <div class="page-header">
-      <h2>🪨 Rock System</h2>
-      <p>One Big Rock. Three Medium. Six Small. Win the day.</p>
-    </div>
 
-    <!-- Date nav -->
-    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap">
-      <button class="btn btn-sm" onclick="rocksNav(-1)">←</button>
-      <div id="rocks-date-label" style="font-family:var(--mono);font-size:.82rem;color:var(--text);min-width:160px;text-align:center">Loading…</div>
-      <button class="btn btn-sm" onclick="rocksNav(1)">→</button>
-      <button class="btn btn-sm" onclick="rocksGoToday()" style="margin-left:.25rem">Today</button>
-      <div style="flex:1"></div>
-      <div id="rocks-progress-wrap" style="display:flex;align-items:center;gap:.6rem">
-        <div id="rocks-progress-bar" style="width:140px;height:6px;background:var(--bg4);border-radius:999px;overflow:hidden">
-          <div id="rocks-progress-fill" style="height:100%;background:linear-gradient(90deg,var(--cyan),var(--green));border-radius:999px;transition:width .5s ease;width:0%"></div>
+    <!-- Header row -->
+    <div class="rocks-header">
+      <div class="rocks-header-left">
+        <div class="rocks-title">🪨 Daily Rocks</div>
+        <div class="rocks-date-nav">
+          <button class="rocks-nav-btn" onclick="rocksNav(-1)">‹</button>
+          <div id="rocks-date-label" class="rocks-date-txt">Loading…</div>
+          <button class="rocks-nav-btn" onclick="rocksNav(1)">›</button>
+          <button class="rocks-today-btn" onclick="rocksGoToday()">Today</button>
         </div>
-        <span id="rocks-progress-txt" style="font-size:.72rem;color:var(--muted);font-family:var(--mono)">0/0</span>
+      </div>
+      <div class="rocks-header-right">
+        <!-- Progress ring -->
+        <div class="rocks-ring-wrap">
+          <svg viewBox="0 0 44 44" class="rocks-ring-svg">
+            <circle cx="22" cy="22" r="18" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="3"/>
+            <circle cx="22" cy="22" r="18" fill="none" stroke="url(#rockGrad)" stroke-width="3"
+              stroke-linecap="round" stroke-dasharray="113" id="rocks-ring-circle"
+              stroke-dashoffset="113" style="transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset .6s ease"/>
+            <defs>
+              <linearGradient id="rockGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="var(--cyan)"/>
+                <stop offset="100%" stop-color="var(--green)"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="rocks-ring-txt" id="rocks-progress-txt">0/0</div>
+        </div>
       </div>
     </div>
 
-    <!-- Rock hierarchy -->
-    <div id="rocks-hierarchy" style="display:flex;flex-direction:column;align-items:center;gap:1.5rem;margin-bottom:1.5rem">
+    <!-- Pyramid stage -->
+    <div class="rocks-stage">
+      <div class="rocks-stage-bg"></div>
 
-      <!-- Big Rock row -->
-      <div id="rocks-big-row" style="display:flex;justify-content:center;gap:1rem;flex-wrap:wrap"></div>
+      <!-- Row labels + rocks -->
+      <div class="rocks-pyramid">
 
-      <!-- Medium Rocks row -->
-      <div id="rocks-medium-row" style="display:flex;justify-content:center;gap:1rem;flex-wrap:wrap"></div>
+        <div class="rocks-row-wrap">
+          <div class="rocks-row-label">BIG ROCK</div>
+          <div id="rocks-big-row" class="rocks-row rocks-row-big"></div>
+          <button class="rocks-add-fab" onclick="openRockModal('big')" title="Add Big Rock">＋</button>
+        </div>
 
-      <!-- Small Rocks row -->
-      <div id="rocks-small-row" style="display:flex;justify-content:center;gap:.75rem;flex-wrap:wrap"></div>
+        <div class="rocks-row-divider"></div>
 
+        <div class="rocks-row-wrap">
+          <div class="rocks-row-label">MISSIONS</div>
+          <div id="rocks-medium-row" class="rocks-row rocks-row-medium"></div>
+          <button class="rocks-add-fab rocks-add-sm" onclick="openRockModal('medium')" title="Add Mission">＋</button>
+        </div>
+
+        <div class="rocks-row-divider"></div>
+
+        <div class="rocks-row-wrap">
+          <div class="rocks-row-label">CHECKPOINTS</div>
+          <div id="rocks-small-row" class="rocks-row rocks-row-small"></div>
+          <button class="rocks-add-fab rocks-add-sm" onclick="openRockModal('small')" title="Add Checkpoint">＋</button>
+        </div>
+
+      </div>
     </div>
 
-    <!-- Add buttons -->
-    <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1.5rem">
-      <button class="btn btn-sm btn-accent" onclick="openRockModal('big')">+ Big Rock</button>
-      <button class="btn btn-sm" onclick="openRockModal('medium')">+ Medium Rock</button>
-      <button class="btn btn-sm" onclick="openRockModal('small')">+ Small Rock</button>
+    <!-- Week strip -->
+    <div class="rocks-week-card">
+      <div class="rocks-week-label">THIS WEEK</div>
+      <div id="rocks-week-strip" class="rocks-week-strip"></div>
     </div>
 
-    <!-- 7-day calendar strip -->
-    <div class="card">
-      <div class="card-label"><span class="dot dot-cyan"></span> Week View</div>
-      <div id="rocks-week-strip" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem"></div>
-    </div>
   </div>
 
   <!-- Rock add modal -->
@@ -2302,14 +2509,15 @@ function renderRockRow(containerId, rocks, size) {
 }
 
 function updateRocksProgress(data) {
-  const all = [...(data.big||[]), ...(data.medium||[]), ...(data.small||[])];
+  const all   = [...(data.big||[]), ...(data.medium||[]), ...(data.small||[])];
   const total = all.length;
   const done  = all.filter(r => r.status === 'complete').length;
-  const pct   = total ? Math.round((done/total)*100) : 0;
-  const fill  = document.getElementById('rocks-progress-fill');
+  const pct   = total ? done / total : 0;
   const txt   = document.getElementById('rocks-progress-txt');
-  if (fill) fill.style.width = pct + '%';
-  if (txt)  txt.textContent  = `${done}/${total}`;
+  if (txt) txt.textContent = `${done}/${total}`;
+  // SVG ring: circumference = 2π×18 ≈ 113
+  const circle = document.getElementById('rocks-ring-circle');
+  if (circle) circle.style.strokeDashoffset = 113 - (pct * 113);
 }
 
 async function toggleRock(id, currentStatus, el) {
@@ -2398,10 +2606,8 @@ function renderRocksWeekStrip(days, today) {
   const el = document.getElementById('rocks-week-strip');
   if (!el) return;
   const dayNames = ['Su','Mo','Tu','We','Th','Fr','Sa'];
-  // Build map
   const map = {};
   days.forEach(d => map[d.date] = d);
-  // Show last 7 days
   const chips = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date();
@@ -2410,8 +2616,9 @@ function renderRocksWeekStrip(days, today) {
     const info = map[ds] || { total: 0, complete: 0, big_done: false };
     const pct = info.total ? Math.round((info.complete/info.total)*100) : 0;
     const isToday = ds === today;
-    chips.push(`<div class="week-day-chip ${isToday ? 'is-today' : ''}" title="${ds}: ${info.complete}/${info.total} rocks done" onclick="_rocksDate='${ds}';renderRocksDateLabel();loadRocks()">
+    chips.push(`<div class="week-day-chip ${isToday ? 'is-today' : ''}" title="${info.complete}/${info.total} rocks" onclick="_rocksDate='${ds}';renderRocksDateLabel();loadRocks()">
       <div class="wdc-label">${dayNames[d.getDay()]}</div>
+      <div class="wdc-date">${d.getDate()}</div>
       <div class="wdc-big ${info.big_done ? 'done' : ''}"></div>
       <div class="wdc-score">${info.total ? pct+'%' : '—'}</div>
     </div>`);
@@ -3365,15 +3572,44 @@ async function loadIronmanProtocol() {
 }
 
 async function saveJournal() {
-  const data = {
-    went_right:   document.getElementById('j-right').value,
-    cut_corners:  document.getElementById('j-corners').value,
-    tomorrow_std: document.getElementById('j-tomorrow').value,
-  };
+  const right   = document.getElementById('j-right').value.trim();
+  const corners = document.getElementById('j-corners').value.trim();
+  const tmrw    = document.getElementById('j-tomorrow').value.trim();
+  if (!right && !corners && !tmrw) { toast('Nothing to save — write something first.','error'); return; }
+
+  const btn = document.querySelector('[onclick="saveJournal()"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+
   try {
-    await api('/ironmind/log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({metrics:data})});
-    toast('Reflection saved!','success');
-  } catch(e){ toast(e.message,'error'); }
+    await api('/ironmind/journal', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ went_right: right, cut_corners: corners, tomorrow_std: tmrw })
+    });
+
+    // Clear fields
+    ['j-right','j-corners','j-tomorrow'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+
+    // Checkmark confirmation
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '✓ Reflection Saved';
+      btn.style.background = 'var(--green)';
+      btn.style.color = '#000';
+      setTimeout(() => {
+        btn.textContent = 'Save Reflection';
+        btn.style.background = '';
+        btn.style.color = '';
+      }, 3000);
+    }
+    toast('Reflection saved ✓', 'success');
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Save Reflection'; }
+    toast(e.message, 'error');
+  }
 }
 
 async function loadIdentity() {

@@ -15,7 +15,7 @@ from datetime import datetime
 from typing import Set
 import apple_music
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel
@@ -379,6 +379,90 @@ async def im_log(req_body: IMLogRequest):
     return {"result": ironmind.log_metrics(req_body.metrics)}
 
 
+def _parse_health_export(raw: dict) -> dict:
+    """Parse Health Auto Export v2 nested JSON into a flat dict keyed by date."""
+    # Health Auto Export v2 format: {"data": {"metrics": [{"name": ..., "data": [...]}]}}
+    metrics_list = (raw.get("data") or {}).get("metrics") or []
+    if not metrics_list:
+        return {}  # not Health Auto Export format
+
+    # metric_name → canonical key + which value field to use
+    NAME_MAP = {
+        "active_energy":                   ("active_calories", "qty"),
+        "step_count":                      ("steps",           "qty"),
+        "heart_rate_variability_sdnn":     ("hrv",             "avg"),
+        "resting_heart_rate":              ("resting_hr",      "qty"),
+        "weight_body_mass":                ("weight_lbs",      "qty"),
+        "sleep_analysis":                  ("sleep_hours",     "asleep"),
+        "cycling_distance":                ("cycle_distance",  "qty"),
+        "walking_running_distance":        ("run_distance",    "qty"),
+        "swimming_distance":               ("swim_distance",   "qty"),
+        "basal_energy_burned":             ("calories_burned", "qty"),
+        "dietary_protein":                 ("protein_g",       "qty"),
+        "heart_rate":                      ("heart_rate_avg",  "avg"),
+    }
+
+    by_date = {}
+    for metric in metrics_list:
+        raw_name = metric.get("name", "").lower().replace(" ", "_")
+        if raw_name not in NAME_MAP:
+            continue
+        key, val_field = NAME_MAP[raw_name]
+        for entry in (metric.get("data") or []):
+            date = str(entry.get("date", ""))[:10]
+            val = entry.get(val_field) or entry.get("qty") or entry.get("avg")
+            if date and val is not None:
+                by_date.setdefault(date, {})[key] = val
+    return by_date
+
+
+@app.post("/health/sync")
+async def health_sync(request: Request):
+    from database import im_upsert_log, ironman_save
+    from datetime import date as _date
+
+    raw = await request.json()
+
+    # Detect Health Auto Export v2 format
+    by_date = _parse_health_export(raw)
+
+    if by_date:
+        # Bulk import — one row per date
+        results = []
+        for date, fields in sorted(by_date.items()):
+            im_f, tr_f = {}, {}
+            for k, v in fields.items():
+                if k in ("steps", "sleep_hours", "sleep_quality", "calories", "weight_lbs", "protein_g"):
+                    im_f[k] = int(v) if k in ("steps",) else v
+                if k in ("resting_hr", "hrv", "active_calories", "steps", "weight",
+                         "run_distance", "cycle_distance", "swim_distance", "calories_burned"):
+                    tr_f[k] = v
+            # active_calories → calories in im_log
+            if "active_calories" in fields: im_f["calories"] = int(fields["active_calories"])
+            if "weight_lbs" in fields:      tr_f["weight"]   = fields["weight_lbs"]
+            if im_f: im_upsert_log(date, **im_f)
+            if tr_f: ironman_save(date, **tr_f)
+            results.append(date)
+        return {"ok": True, "format": "health_auto_export", "dates_synced": len(results), "dates": results[-5:]}
+
+    # Flat format (manual / Shortcut)
+    today = raw.get("date") or _date.today().strftime("%Y-%m-%d")
+    im_f, tr_f = {}, {}
+    if raw.get("steps")           is not None: im_f["steps"]         = int(raw["steps"])
+    if raw.get("sleep_hours")     is not None: im_f["sleep_hours"]   = raw["sleep_hours"]
+    if raw.get("sleep_quality")   is not None: im_f["sleep_quality"] = raw["sleep_quality"]
+    if raw.get("active_calories") is not None: im_f["calories"]      = int(raw["active_calories"])
+    if raw.get("weight_lbs")      is not None: im_f["weight_lbs"]    = raw["weight_lbs"]
+    if raw.get("resting_hr")      is not None: tr_f["resting_hr"]    = raw["resting_hr"]
+    if raw.get("hrv")             is not None: tr_f["hrv"]           = raw["hrv"]
+    if raw.get("active_calories") is not None: tr_f["active_calories"] = int(raw["active_calories"])
+    if raw.get("steps")           is not None: tr_f["steps"]         = int(raw["steps"])
+    if raw.get("weight_lbs")      is not None: tr_f["weight"]        = raw["weight_lbs"]
+    if im_f: im_upsert_log(today, **im_f)
+    if tr_f: ironman_save(today, **tr_f)
+    return {"ok": True, "format": "flat", "date": today, "synced": {**im_f, **tr_f}}
+
+
 @app.get("/ironmind/streaks")
 async def im_streaks():
     from database import im_get_streaks
@@ -407,6 +491,21 @@ async def im_identity():
 async def im_journal():
     import ironmind
     return {"result": ironmind.get_journal()}
+
+
+class JournalRequest(BaseModel):
+    went_right:   str = ""
+    cut_corners:  str = ""
+    tomorrow_std: str = ""
+
+@app.post("/ironmind/journal")
+async def im_save_journal(body: JournalRequest):
+    from database import im_save_journal as db_save
+    from datetime import date as _date
+    today = _date.today().strftime("%Y-%m-%d")
+    db_save(today, body.went_right, body.cut_corners, body.tomorrow_std)
+    log_command("daily reflection", "journal", f"Saved reflection for {today}", True)
+    return {"ok": True, "date": today}
 
 
 class TrainingDataRequest(BaseModel):
