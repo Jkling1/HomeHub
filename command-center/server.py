@@ -613,6 +613,57 @@ async def agents_log():
     return {"lines": lines[-100:]}
 
 
+# ── Rocks ──────────────────────────────────────────────────────────────────────
+
+class RockCreate(BaseModel):
+    date: str
+    size: str       # big | medium | small
+    title: str
+    category: str = "training"
+    sort_order: int = 0
+
+class RockUpdate(BaseModel):
+    status: str = None
+    title: str = None
+    category: str = None
+    notes: str = None
+
+@app.get("/rocks")
+async def get_rocks(date: str = None):
+    from database import rocks_get
+    from datetime import date as _date
+    d = date or _date.today().strftime("%Y-%m-%d")
+    return rocks_get(d)
+
+@app.post("/rocks")
+async def create_rock(body: RockCreate):
+    from database import rock_create, rocks_get
+    if body.size not in ("big", "medium", "small"):
+        raise HTTPException(400, "size must be big, medium, or small")
+    rock_id = rock_create(body.date, body.size, body.title, body.category, body.sort_order)
+    return {"id": rock_id, **rocks_get(body.date)}
+
+@app.patch("/rocks/{rock_id}")
+async def update_rock(rock_id: int, body: RockUpdate):
+    from database import rock_update
+    fields = {k: v for k, v in body.dict().items() if v is not None}
+    rock_update(rock_id, **fields)
+    return {"ok": True}
+
+@app.delete("/rocks/{rock_id}")
+async def delete_rock(rock_id: int):
+    from database import rock_delete
+    rock_delete(rock_id)
+    return {"ok": True}
+
+@app.get("/rocks/week")
+async def rocks_week(start: str = None):
+    from database import rocks_get_week
+    from datetime import date as _date, timedelta
+    s = start or (_date.today() - timedelta(days=6)).strftime("%Y-%m-%d")
+    return rocks_get_week(s, days=7)
+
+
 # ── Log Hub ────────────────────────────────────────────────────────────────────
 
 @app.get("/logs/workout")

@@ -152,6 +152,18 @@ def init_db():
                 protocol         TEXT,
                 generated_at     TEXT
             );
+            CREATE TABLE IF NOT EXISTS rocks (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                date       TEXT NOT NULL,
+                size       TEXT NOT NULL,
+                title      TEXT NOT NULL,
+                category   TEXT DEFAULT 'training',
+                status     TEXT DEFAULT 'incomplete',
+                sort_order INTEGER DEFAULT 0,
+                notes      TEXT,
+                created_at TEXT DEFAULT (datetime('now','localtime')),
+                updated_at TEXT DEFAULT (datetime('now','localtime'))
+            );
             CREATE TABLE IF NOT EXISTS scenes (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 name        TEXT NOT NULL UNIQUE,
@@ -481,6 +493,70 @@ def ironman_get_history(limit: int = 14) -> list:
             "SELECT * FROM ironman_training ORDER BY date DESC LIMIT ?", (limit,)
         ).fetchall()
         return [dict(r) for r in rows]
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ROCKS
+# ══════════════════════════════════════════════════════════════════════════════
+
+def rocks_get(date: str) -> dict:
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT * FROM rocks WHERE date=? ORDER BY size, sort_order, id", (date,)
+        ).fetchall()
+    result = {"big": [], "medium": [], "small": []}
+    for r in rows:
+        d = dict(r)
+        result.get(d["size"], result["small"]).append(d)
+    return result
+
+
+def rock_create(date: str, size: str, title: str, category: str = "training", sort_order: int = 0) -> int:
+    with get_conn() as conn:
+        cur = conn.execute(
+            "INSERT INTO rocks (date, size, title, category, sort_order) VALUES (?, ?, ?, ?, ?)",
+            (date, size, title, category, sort_order),
+        )
+        return cur.lastrowid
+
+
+def rock_update(rock_id: int, **fields):
+    if not fields:
+        return
+    allowed = {"status", "title", "category", "notes", "sort_order"}
+    fields = {k: v for k, v in fields.items() if k in allowed}
+    if not fields:
+        return
+    sets = ", ".join(f"{k}=?" for k in fields)
+    with get_conn() as conn:
+        conn.execute(
+            f"UPDATE rocks SET {sets}, updated_at=datetime('now','localtime') WHERE id=?",
+            list(fields.values()) + [rock_id],
+        )
+
+
+def rock_delete(rock_id: int):
+    with get_conn() as conn:
+        conn.execute("DELETE FROM rocks WHERE id=?", (rock_id,))
+
+
+def rocks_get_week(start_date: str, days: int = 7) -> list:
+    """Return daily completion stats for calendar view."""
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT date, size, status FROM rocks WHERE date >= ? ORDER BY date",
+            (start_date,),
+        ).fetchall()
+    from collections import defaultdict
+    daily = defaultdict(lambda: {"total": 0, "complete": 0, "big_done": False})
+    for r in rows:
+        d = dict(r)
+        daily[d["date"]]["total"] += 1
+        if d["status"] == "complete":
+            daily[d["date"]]["complete"] += 1
+            if d["size"] == "big":
+                daily[d["date"]]["big_done"] = True
+    return [{"date": k, **v} for k, v in sorted(daily.items())]
 
 
 # ══════════════════════════════════════════════════════════════════════════════

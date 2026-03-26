@@ -1038,6 +1038,149 @@ textarea { resize: vertical; min-height: 70px; }
 }
 
 /* ══════════════════════════════════════════════════════════
+   ROCK SYSTEM
+══════════════════════════════════════════════════════════ */
+
+/* Category color map */
+.rock[data-cat="training"]  { --rock-color: var(--cyan);   --rock-glow: rgba(0,212,255,.25); }
+.rock[data-cat="nutrition"] { --rock-color: var(--green);  --rock-glow: rgba(0,255,136,.25); }
+.rock[data-cat="recovery"]  { --rock-color: var(--violet); --rock-glow: rgba(124,58,237,.25); }
+.rock[data-cat="mental"]    { --rock-color: var(--orange); --rock-glow: rgba(255,140,66,.25); }
+
+.rock {
+  --rock-color: var(--cyan);
+  --rock-glow:  rgba(0,212,255,.2);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  user-select: none;
+  background: rgba(255,255,255,.03);
+  border: 1.5px solid rgba(255,255,255,.08);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  transition: transform .18s cubic-bezier(.34,1.56,.64,1),
+              box-shadow .2s ease,
+              border-color .2s ease,
+              background .2s ease;
+  text-align: center;
+  padding: .4rem;
+  overflow: hidden;
+}
+.rock::before {
+  content: '';
+  position: absolute;
+  top: -30%; left: -30%;
+  width: 60%; height: 40%;
+  background: rgba(255,255,255,.06);
+  border-radius: 50%;
+  transform: rotate(-30deg);
+  pointer-events: none;
+  transition: opacity .2s;
+}
+.rock:hover {
+  transform: scale(1.07);
+  border-color: var(--rock-color);
+  box-shadow: 0 0 0 1px var(--rock-color), 0 8px 28px var(--rock-glow);
+}
+.rock.complete {
+  background: linear-gradient(135deg, rgba(var(--rock-color-rgb),.18), rgba(var(--rock-color-rgb),.08));
+  border-color: var(--rock-color);
+  box-shadow: 0 0 0 1px var(--rock-color), 0 6px 24px var(--rock-glow), inset 0 0 20px rgba(255,255,255,.03);
+}
+
+/* Sizes */
+.rock-big    { width: 148px; height: 148px; }
+.rock-medium { width:  96px; height:  96px; }
+.rock-small  { width:  64px; height:  64px; }
+
+/* Text inside rocks */
+.rock-label-big    { font-size: .78rem; font-weight: 700; line-height: 1.3; color: var(--text); padding: 0 .6rem; }
+.rock-label-medium { font-size: .66rem; font-weight: 600; line-height: 1.3; color: var(--text); padding: 0 .4rem; }
+.rock-label-small  { font-size: .55rem; font-weight: 600; line-height: 1.2; color: var(--text2); padding: 0 .3rem; }
+
+.rock-cat-icon { font-size: 1.1rem; margin-bottom: .15rem; }
+.rock-big    .rock-cat-icon { font-size: 1.45rem; margin-bottom: .3rem; }
+.rock-small  .rock-cat-icon { font-size: .8rem; margin-bottom: .1rem; }
+
+.rock-check {
+  position: absolute;
+  bottom: 8px; right: 8px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--rock-color);
+  color: #000;
+  font-size: .62rem;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900;
+  opacity: 0;
+  transition: opacity .2s;
+}
+.rock-big .rock-check { width: 24px; height: 24px; font-size: .75rem; bottom: 10px; right: 10px; }
+.rock.complete .rock-check { opacity: 1; }
+
+.rock-delete {
+  position: absolute;
+  top: 3px; right: 3px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: rgba(255,77,109,.7);
+  color: #fff;
+  font-size: .5rem;
+  display: none; align-items: center; justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  line-height: 1;
+}
+.rock:hover .rock-delete { display: flex; }
+
+/* Big Rock — pulse when incomplete */
+@keyframes rock-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(0,212,255,.2), 0 0 20px rgba(0,212,255,.06); }
+  50%       { box-shadow: 0 0 0 2px rgba(0,212,255,.35), 0 0 36px rgba(0,212,255,.14); }
+}
+.rock-big:not(.complete) { animation: rock-pulse 3s ease-in-out infinite; }
+.rock-big.complete        { animation: none; }
+
+/* Completion burst */
+@keyframes rock-burst {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.18); }
+  70%  { transform: scale(.96); }
+  100% { transform: scale(1); }
+}
+.rock.rock-completing { animation: rock-burst .45s cubic-bezier(.34,1.56,.64,1) forwards; }
+
+/* Week strip */
+.week-day-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .2rem;
+  flex: 1;
+  min-width: 48px;
+  padding: .5rem .2rem;
+  border-radius: 10px;
+  background: var(--bg4);
+  border: 1px solid var(--glass-border);
+  cursor: default;
+}
+.week-day-chip.is-today {
+  border-color: var(--cyan);
+  background: rgba(0,212,255,.06);
+}
+.week-day-chip .wdc-label  { font-size: .58rem; color: var(--muted); font-family: var(--mono); }
+.week-day-chip .wdc-big    { width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--cyan); }
+.week-day-chip .wdc-big.done { background: var(--cyan); }
+.week-day-chip .wdc-score  { font-size: .58rem; font-family: var(--mono); color: var(--text2); }
+
+/* rock-cat-btn active state */
+.rock-cat-btn.active { border-color: var(--cyan); color: var(--cyan); background: rgba(0,212,255,.08); }
+
+/* ══════════════════════════════════════════════════════════
    EXPANDABLE CHAT
 ══════════════════════════════════════════════════════════ */
 
@@ -1228,6 +1371,9 @@ textarea { resize: vertical; min-height: 70px; }
     </button>
     <button class="nav-item" onclick="switchPanel('agents',this)">
       <span class="nav-icon">🤖</span><span class="nav-label">Agents</span>
+    </button>
+    <button class="nav-item" onclick="switchPanel('rocks',this)">
+      <span class="nav-icon">🪨</span><span class="nav-label">Rocks</span>
     </button>
     <button class="nav-item" onclick="switchPanel('logs',this)">
       <span class="nav-icon">🗂️</span><span class="nav-label">Logs</span>
@@ -1859,6 +2005,80 @@ textarea { resize: vertical; min-height: 70px; }
     <div id="agent-log" style="display:none"></div>
   </div>
 
+  <!-- ── ROCKS ── -->
+  <div class="panel" id="panel-rocks">
+    <div class="page-header">
+      <h2>🪨 Rock System</h2>
+      <p>One Big Rock. Three Medium. Six Small. Win the day.</p>
+    </div>
+
+    <!-- Date nav -->
+    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap">
+      <button class="btn btn-sm" onclick="rocksNav(-1)">←</button>
+      <div id="rocks-date-label" style="font-family:var(--mono);font-size:.82rem;color:var(--text);min-width:160px;text-align:center">Loading…</div>
+      <button class="btn btn-sm" onclick="rocksNav(1)">→</button>
+      <button class="btn btn-sm" onclick="rocksGoToday()" style="margin-left:.25rem">Today</button>
+      <div style="flex:1"></div>
+      <div id="rocks-progress-wrap" style="display:flex;align-items:center;gap:.6rem">
+        <div id="rocks-progress-bar" style="width:140px;height:6px;background:var(--bg4);border-radius:999px;overflow:hidden">
+          <div id="rocks-progress-fill" style="height:100%;background:linear-gradient(90deg,var(--cyan),var(--green));border-radius:999px;transition:width .5s ease;width:0%"></div>
+        </div>
+        <span id="rocks-progress-txt" style="font-size:.72rem;color:var(--muted);font-family:var(--mono)">0/0</span>
+      </div>
+    </div>
+
+    <!-- Rock hierarchy -->
+    <div id="rocks-hierarchy" style="display:flex;flex-direction:column;align-items:center;gap:1.5rem;margin-bottom:1.5rem">
+
+      <!-- Big Rock row -->
+      <div id="rocks-big-row" style="display:flex;justify-content:center;gap:1rem;flex-wrap:wrap"></div>
+
+      <!-- Medium Rocks row -->
+      <div id="rocks-medium-row" style="display:flex;justify-content:center;gap:1rem;flex-wrap:wrap"></div>
+
+      <!-- Small Rocks row -->
+      <div id="rocks-small-row" style="display:flex;justify-content:center;gap:.75rem;flex-wrap:wrap"></div>
+
+    </div>
+
+    <!-- Add buttons -->
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1.5rem">
+      <button class="btn btn-sm btn-accent" onclick="openRockModal('big')">+ Big Rock</button>
+      <button class="btn btn-sm" onclick="openRockModal('medium')">+ Medium Rock</button>
+      <button class="btn btn-sm" onclick="openRockModal('small')">+ Small Rock</button>
+    </div>
+
+    <!-- 7-day calendar strip -->
+    <div class="card">
+      <div class="card-label"><span class="dot dot-cyan"></span> Week View</div>
+      <div id="rocks-week-strip" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem"></div>
+    </div>
+  </div>
+
+  <!-- Rock add modal -->
+  <div id="rock-modal" style="display:none;position:fixed;inset:0;z-index:800;align-items:center;justify-content:center;background:rgba(7,8,15,.7);backdrop-filter:blur(8px)">
+    <div style="background:var(--bg3);border:1px solid var(--glass-border);border-radius:var(--radius);padding:1.5rem;width:100%;max-width:380px;box-shadow:0 24px 64px rgba(0,0,0,.5)">
+      <div style="font-weight:700;font-size:1rem;margin-bottom:1rem" id="rock-modal-title">+ Add Rock</div>
+      <div style="margin-bottom:.75rem">
+        <div class="section-title" style="margin-bottom:.3rem">Title</div>
+        <input type="text" id="rock-title-input" placeholder="e.g. Long Run 14mi" style="width:100%">
+      </div>
+      <div style="margin-bottom:1rem">
+        <div class="section-title" style="margin-bottom:.3rem">Category</div>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap" id="rock-cat-btns">
+          <button class="btn btn-sm rock-cat-btn active" data-cat="training"  onclick="selectRockCat(this)">🏊 Training</button>
+          <button class="btn btn-sm rock-cat-btn"        data-cat="nutrition" onclick="selectRockCat(this)">🥗 Nutrition</button>
+          <button class="btn btn-sm rock-cat-btn"        data-cat="recovery"  onclick="selectRockCat(this)">😴 Recovery</button>
+          <button class="btn btn-sm rock-cat-btn"        data-cat="mental"    onclick="selectRockCat(this)">🧠 Mental</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:.5rem">
+        <button class="btn btn-accent" style="flex:1" onclick="submitRock()">Add Rock</button>
+        <button class="btn" onclick="closeRockModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── LOGS HUB ── -->
   <div class="panel" id="panel-logs">
     <div class="page-header">
@@ -1990,7 +2210,219 @@ function loadPanel(id) {
   if (id === 'analytics') { loadAnalytics(); loadStockAlerts(); loadHistory(); }
   if (id === 'agents')    loadAgents();
   if (id === 'logs')      initLogHub();
+  if (id === 'rocks')     initRocks();
 }
+
+/* ══════════════════════════════════════════════════════════
+   ROCK SYSTEM
+══════════════════════════════════════════════════════════ */
+
+const CAT_ICONS = { training:'🏊', nutrition:'🥗', recovery:'😴', mental:'🧠' };
+let _rocksDate = new Date().toISOString().slice(0,10);
+let _rockModalSize = 'big';
+let _rockModalCat  = 'training';
+
+function initRocks() {
+  renderRocksDateLabel();
+  loadRocks();
+  loadRocksWeek();
+}
+
+function rocksNav(dir) {
+  const d = new Date(_rocksDate + 'T12:00:00');
+  d.setDate(d.getDate() + dir);
+  _rocksDate = d.toISOString().slice(0,10);
+  renderRocksDateLabel();
+  loadRocks();
+}
+
+function rocksGoToday() {
+  _rocksDate = new Date().toISOString().slice(0,10);
+  renderRocksDateLabel();
+  loadRocks();
+}
+
+function renderRocksDateLabel() {
+  const d = new Date(_rocksDate + 'T12:00:00');
+  const today = new Date().toISOString().slice(0,10);
+  const isToday = _rocksDate === today;
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const label = `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}${isToday ? ' · Today' : ''}`;
+  const el = document.getElementById('rocks-date-label');
+  if (el) { el.textContent = label; el.style.color = isToday ? 'var(--cyan)' : 'var(--text)'; }
+}
+
+async function loadRocks() {
+  try {
+    const data = await api(`/rocks?date=${_rocksDate}`);
+    renderRockRow('rocks-big-row',    data.big    || [], 'big');
+    renderRockRow('rocks-medium-row', data.medium || [], 'medium');
+    renderRockRow('rocks-small-row',  data.small  || [], 'small');
+    updateRocksProgress(data);
+    loadRocksWeek();
+  } catch(e) { console.error('[rocks]', e); }
+}
+
+function renderRockRow(containerId, rocks, size) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const maxMap = { big: 1, medium: 3, small: 6 };
+  const max = maxMap[size] || 6;
+  const sizeClass = `rock-${size}`;
+  const labelClass = `rock-label-${size}`;
+
+  // Render existing rocks
+  let html = rocks.map(r => {
+    const cat = r.category || 'training';
+    const icon = CAT_ICONS[cat] || '🪨';
+    const done = r.status === 'complete';
+    return `<div class="rock ${sizeClass} ${done ? 'complete' : ''}"
+                 data-cat="${cat}" data-id="${r.id}" data-size="${size}"
+                 onclick="toggleRock(${r.id}, '${r.status}', this)"
+                 title="${r.title}">
+      <div class="rock-cat-icon">${icon}</div>
+      <div class="${labelClass}">${r.title}</div>
+      <div class="rock-check">✓</div>
+      <div class="rock-delete" onclick="event.stopPropagation();deleteRock(${r.id})">✕</div>
+    </div>`;
+  }).join('');
+
+  // Empty slots
+  for (let i = rocks.length; i < max; i++) {
+    html += `<div class="rock ${sizeClass}"
+                  style="opacity:.25;border-style:dashed;cursor:default"
+                  onclick="openRockModal('${size}')"
+                  title="Add ${size} rock">
+      <div style="font-size:${size==='big'?'1.5rem':size==='medium'?'1.1rem':'.8rem'};color:var(--muted)">+</div>
+    </div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+function updateRocksProgress(data) {
+  const all = [...(data.big||[]), ...(data.medium||[]), ...(data.small||[])];
+  const total = all.length;
+  const done  = all.filter(r => r.status === 'complete').length;
+  const pct   = total ? Math.round((done/total)*100) : 0;
+  const fill  = document.getElementById('rocks-progress-fill');
+  const txt   = document.getElementById('rocks-progress-txt');
+  if (fill) fill.style.width = pct + '%';
+  if (txt)  txt.textContent  = `${done}/${total}`;
+}
+
+async function toggleRock(id, currentStatus, el) {
+  const newStatus = currentStatus === 'complete' ? 'incomplete' : 'complete';
+  // Optimistic UI
+  el.classList.toggle('complete', newStatus === 'complete');
+  el.dataset.status = newStatus;  // doesn't exist but harmless
+  if (newStatus === 'complete') {
+    el.classList.add('rock-completing');
+    setTimeout(() => el.classList.remove('rock-completing'), 500);
+  }
+  try {
+    await fetch(`/rocks/${id}`, {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ status: newStatus })
+    });
+    // Update onclick to reflect new status
+    el.setAttribute('onclick', `toggleRock(${id}, '${newStatus}', this)`);
+    // Refresh progress
+    const data = await api(`/rocks?date=${_rocksDate}`);
+    updateRocksProgress(data);
+    loadRocksWeek();
+  } catch(e) { console.error(e); }
+}
+
+async function deleteRock(id) {
+  if (!confirm('Remove this rock?')) return;
+  try {
+    await fetch(`/rocks/${id}`, { method: 'DELETE' });
+    loadRocks();
+  } catch(e) { console.error(e); }
+}
+
+/* ── Add Rock Modal ── */
+function openRockModal(size) {
+  _rockModalSize = size;
+  _rockModalCat  = 'training';
+  document.getElementById('rock-title-input').value = '';
+  document.getElementById('rock-modal-title').textContent = `+ Add ${size.charAt(0).toUpperCase()+size.slice(1)} Rock`;
+  document.querySelectorAll('.rock-cat-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.rock-cat-btn[data-cat="training"]').classList.add('active');
+  const modal = document.getElementById('rock-modal');
+  modal.style.display = 'flex';
+  setTimeout(() => document.getElementById('rock-title-input').focus(), 50);
+  document.getElementById('rock-title-input').onkeydown = e => { if(e.key==='Enter') submitRock(); if(e.key==='Escape') closeRockModal(); };
+}
+
+function closeRockModal() {
+  document.getElementById('rock-modal').style.display = 'none';
+}
+
+function selectRockCat(btn) {
+  document.querySelectorAll('.rock-cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  _rockModalCat = btn.dataset.cat;
+}
+
+async function submitRock() {
+  const title = document.getElementById('rock-title-input').value.trim();
+  if (!title) return;
+  closeRockModal();
+  try {
+    await fetch('/rocks', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ date: _rocksDate, size: _rockModalSize, title, category: _rockModalCat })
+    });
+    loadRocks();
+  } catch(e) { console.error(e); }
+}
+
+/* ── Week strip ── */
+async function loadRocksWeek() {
+  const today = new Date().toISOString().slice(0,10);
+  const start = new Date();
+  start.setDate(start.getDate() - 6);
+  const startStr = start.toISOString().slice(0,10);
+  try {
+    const data = await api(`/rocks/week?start=${startStr}`);
+    renderRocksWeekStrip(data, today);
+  } catch(e) {}
+}
+
+function renderRocksWeekStrip(days, today) {
+  const el = document.getElementById('rocks-week-strip');
+  if (!el) return;
+  const dayNames = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  // Build map
+  const map = {};
+  days.forEach(d => map[d.date] = d);
+  // Show last 7 days
+  const chips = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const ds = d.toISOString().slice(0,10);
+    const info = map[ds] || { total: 0, complete: 0, big_done: false };
+    const pct = info.total ? Math.round((info.complete/info.total)*100) : 0;
+    const isToday = ds === today;
+    chips.push(`<div class="week-day-chip ${isToday ? 'is-today' : ''}" title="${ds}: ${info.complete}/${info.total} rocks done" onclick="_rocksDate='${ds}';renderRocksDateLabel();loadRocks()">
+      <div class="wdc-label">${dayNames[d.getDay()]}</div>
+      <div class="wdc-big ${info.big_done ? 'done' : ''}"></div>
+      <div class="wdc-score">${info.total ? pct+'%' : '—'}</div>
+    </div>`);
+  }
+  el.innerHTML = chips.join('');
+}
+
+// Close modal on backdrop click
+document.getElementById('rock-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeRockModal();
+});
 
 /* ══════════════════════════════════════════════════════════
    LOG HUB
