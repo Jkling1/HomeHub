@@ -34,7 +34,7 @@ HUE_BRIDGE = os.environ.get("HUE_BRIDGE", "192.168.12.225")
 HUE_KEY    = os.environ.get("HUE_KEY", "")
 SCRIPT_DIR = Path(__file__).parent
 
-from database import init_db, log_command, get_history, update_light_state, get_light_state, update_music_state, get_music_state
+from database import init_db, log_command, get_history, update_light_state, get_light_state, update_music_state, get_music_state, get_conn
 
 init_db()
 
@@ -356,6 +356,25 @@ async def im_plan():
     return {"result": ironmind.get_plan()}
 
 
+class IMPlanRequest(BaseModel):
+    date: str = None
+    priority_1: str = None
+    priority_2: str = None
+    priority_3: str = None
+    training: str = None
+    mental_theme: str = None
+    notes: str = None
+
+@app.post("/ironmind/plan")
+async def im_save_plan_endpoint(req: IMPlanRequest):
+    from database import im_save_plan
+    from datetime import date as _date
+    d = req.date or _date.today().strftime("%Y-%m-%d")
+    fields = {k: v for k, v in req.dict().items() if k != "date" and v is not None}
+    im_save_plan(d, **fields)
+    return {"result": "saved", "date": d}
+
+
 @app.get("/ironmind/log")
 async def im_get_log(raw: bool = False):
     from database import im_get_log as db_get_log
@@ -497,6 +516,14 @@ class JournalRequest(BaseModel):
     went_right:   str = ""
     cut_corners:  str = ""
     tomorrow_std: str = ""
+
+@app.get("/ironmind/protocol")
+async def im_get_protocol():
+    from database import daily_prep_get
+    from datetime import date as _date
+    today = _date.today().strftime("%Y-%m-%d")
+    return daily_prep_get(today) or {}
+
 
 @app.post("/ironmind/journal")
 async def im_save_journal(body: JournalRequest):
@@ -1098,9 +1125,307 @@ Use real, well-known songs. Match BPM to target range. Be specific and creative.
         return {"error": str(e)}
 
 
+@app.get("/music/info")
+async def music_info():
+    """Generate song + artist info for the currently playing track via Claude. Caches by track."""
+    import sqlite3, time
+    status = get_music_state()
+    track  = status.get("track", "").strip()
+    artist = status.get("artist", "").strip()
+    if not track or not artist or track == "":
+        return {"track": track, "artist": artist, "cached": False}
+
+    # Check cache in DB (simple key-value in preferences table)
+    cache_key = f"music_info::{artist}::{track}"
+    with get_conn() as conn:
+        row = conn.execute("SELECT value FROM preferences WHERE key=?", (cache_key,)).fetchone()
+    if row:
+        import json as _json
+        return {**_json.loads(row[0]), "cached": True}
+
+    # Generate via Claude
+    try:
+        import requests as _req, json as _json
+        prompt = f"""Music expert task: provide info about "{track}" by {artist}.
+
+Respond with ONLY valid JSON, no markdown fences, no explanation:
+{{"track":"{track}","artist":"{artist}","album":"album name","year":"release year","genre":"genre","story":"2-3 sentences about this song's story or inspiration","fun_fact":"one interesting fact about this song","artist_bio":"1-2 sentences about {artist}"}}"""
+        r = _req.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={"x-api-key": os.environ.get("ANTHROPIC_API_KEY",""), "anthropic-version":"2023-06-01","content-type":"application/json"},
+            json={"model":"claude-haiku-4-5-20251001","max_tokens":500,"messages":[
+                {"role":"user","content":prompt},
+                {"role":"assistant","content":"{"}
+            ]},
+            timeout=20
+        )
+        text = "{" + r.json()["content"][0]["text"].strip()
+        if "}" in text:
+            text = text[:text.rindex("}")+1]
+        data = _json.loads(text)
+        # Cache it
+        with get_conn() as conn:
+            conn.execute("INSERT OR REPLACE INTO preferences (key,value) VALUES (?,?)",
+                         (cache_key, _json.dumps(data)))
+        return {**data, "cached": False}
+    except Exception as e:
+        return {"track": track, "artist": artist, "error": str(e), "cached": False}
+
+
+@app.get("/music/mood-queue")
+async def music_mood_queue(mood: str = "focus"):
+    """Generate a 5-song mood-based playlist via Claude."""
+    import requests as _req, json as _json
+    MOOD_CONTEXTS = {
+        "focus":     "deep focus and concentration, no lyrics preferred, instrumental or minimal vocals",
+        "hype":      "high energy workout, aggressive beats, trap/hip-hop/rock, gets you fired up",
+        "chill":     "relaxed and mellow, winding down, lo-fi or R&B or acoustic",
+        "deep work": "long sustained focus session, ambient or classical, no distractions",
+        "sleep":     "falling asleep or meditating, very calm, ambient or soft piano",
+    }
+    context = MOOD_CONTEXTS.get(mood.lower(), MOOD_CONTEXTS["focus"])
+    prompt = f"""You are a music curator. Jordan wants a {mood} playlist: {context}.
+
+Give him exactly 5 song recommendations. Respond with ONLY valid JSON:
+{{"mood":"{mood}","tracks":[{{"title":"song title","artist":"artist name","reason":"one sentence why this fits the {mood} vibe"}}]}}"""
+    try:
+        r = _req.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={"x-api-key": os.environ.get("ANTHROPIC_API_KEY",""), "anthropic-version":"2023-06-01","content-type":"application/json"},
+            json={"model":"claude-haiku-4-5-20251001","max_tokens":600,"messages":[
+                {"role":"user","content":prompt},
+                {"role":"assistant","content":"{"}
+            ]},
+            timeout=20
+        )
+        text = "{" + r.json()["content"][0]["text"].strip()
+        if "}" in text:
+            text = text[:text.rindex("}")+1]
+        return _json.loads(text)
+    except Exception as e:
+        return {"mood": mood, "tracks": [], "error": str(e)}
+
+
 @app.get("/", response_class=HTMLResponse)
 async def dashboard():
     return FileResponse(str(SCRIPT_DIR / "static" / "index.html"))
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# NUTRITION
+# ══════════════════════════════════════════════════════════════════════════════
+
+from database import recipe_save, recipe_list, recipe_delete, recipe_favorite, \
+                     grocery_list_get, grocery_add, grocery_toggle, grocery_delete, grocery_clear_checked
+
+class RecipeGenerateRequest(BaseModel):
+    goal: str = "endurance"
+    cook_time: str = "quick"
+    ingredients: str = ""
+    calories: int = 600
+
+class RecipeSaveRequest(BaseModel):
+    name: str
+    calories: int = 0
+    protein_g: int = 0
+    carbs_g: int = 0
+    fats_g: int = 0
+    ingredients: list = []
+    instructions: str = ""
+    why: str = ""
+    tags: list = []
+
+class GroceryAddRequest(BaseModel):
+    item: str
+    quantity: str = ""
+
+@app.post("/nutrition/recipe/generate")
+async def nutrition_generate(req: RecipeGenerateRequest):
+    import requests as _req, json as _json
+    ingredients_hint = f"using some of these: {req.ingredients}" if req.ingredients.strip() else "any ingredients"
+    prompt = f"""You are a sports nutritionist for an Ironman triathlete named Jordan.
+Generate ONE recipe for him: goal={req.goal}, cook time={req.cook_time}, target ~{req.calories} calories, {ingredients_hint}.
+
+Respond with ONLY valid JSON:
+{{"name":"recipe name","calories":{req.calories},"protein_g":0,"carbs_g":0,"fats_g":0,"ingredients":["item1","item2"],"instructions":"step by step instructions","why":"1-2 sentences on why this supports his training","tags":["tag1"]}}"""
+    try:
+        r = _req.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={"x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json"},
+            json={"model": "claude-haiku-4-5-20251001", "max_tokens": 700, "messages": [
+                {"role": "user", "content": prompt},
+                {"role": "assistant", "content": "{"}
+            ]},
+            timeout=25
+        )
+        text = "{" + r.json()["content"][0]["text"].strip()
+        if "}" in text:
+            text = text[:text.rindex("}")+1]
+        return _json.loads(text)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/nutrition/recipes")
+async def nutrition_save_recipe(req: RecipeSaveRequest):
+    rid = recipe_save(req.dict())
+    return {"id": rid, "ok": True}
+
+@app.get("/nutrition/recipes")
+async def nutrition_get_recipes():
+    return recipe_list()
+
+@app.delete("/nutrition/recipes/{recipe_id}")
+async def nutrition_delete_recipe(recipe_id: int):
+    recipe_delete(recipe_id)
+    return {"ok": True}
+
+@app.post("/nutrition/recipes/{recipe_id}/favorite")
+async def nutrition_favorite(recipe_id: int, state: int = 1):
+    recipe_favorite(recipe_id, state)
+    return {"ok": True}
+
+@app.post("/nutrition/recipes/{recipe_id}/grocery")
+async def nutrition_add_to_grocery(recipe_id: int):
+    recipes = recipe_list()
+    recipe = next((r for r in recipes if r["id"] == recipe_id), None)
+    if not recipe:
+        raise HTTPException(status_code=404, detail="Recipe not found")
+    added = 0
+    for ing in recipe.get("ingredients", []):
+        grocery_add(ing)
+        added += 1
+    return {"added": added}
+
+@app.get("/nutrition/grocery")
+async def nutrition_grocery_get():
+    return grocery_list_get()
+
+@app.post("/nutrition/grocery")
+async def nutrition_grocery_add(req: GroceryAddRequest):
+    gid = grocery_add(req.item, req.quantity)
+    return {"id": gid, "ok": True}
+
+@app.patch("/nutrition/grocery/{item_id}")
+async def nutrition_grocery_toggle(item_id: int, checked: int = 1):
+    grocery_toggle(item_id, checked)
+    return {"ok": True}
+
+@app.delete("/nutrition/grocery/{item_id}")
+async def nutrition_grocery_delete(item_id: int):
+    grocery_delete(item_id)
+    return {"ok": True}
+
+@app.delete("/nutrition/grocery")
+async def nutrition_grocery_clear():
+    grocery_clear_checked()
+    return {"ok": True}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# STOCKS
+# ══════════════════════════════════════════════════════════════════════════════
+
+_stocks_cache = {"data": [], "ts": 0}
+DEFAULT_TICKERS = ["AAPL", "NVDA", "TSLA", "AMZN", "MSFT", "META", "SPY"]
+
+@app.get("/stocks/watchlist")
+async def stocks_watchlist():
+    import time, yfinance as yf
+    now = time.time()
+    if now - _stocks_cache["ts"] < 300 and _stocks_cache["data"]:  # 5-min cache
+        return {"stocks": _stocks_cache["data"]}
+    try:
+        results = []
+        for ticker in DEFAULT_TICKERS:
+            t = yf.Ticker(ticker)
+            info = t.fast_info
+            price  = round(float(info.last_price or 0), 2)
+            prev   = round(float(info.previous_close or price), 2)
+            change = round(price - prev, 2)
+            pct    = round((change / prev * 100) if prev else 0, 2)
+            trend  = "Uptrend" if pct > 1 else "Downtrend" if pct < -1 else "Flat"
+            buy_score = min(10, max(1, round(5 + (pct * 0.8) + (1 if pct > 0 else -1))))
+            results.append({
+                "ticker": ticker,
+                "price": price,
+                "change": change,
+                "pct": pct,
+                "trend": trend,
+                "buy_score": buy_score,
+            })
+        results.sort(key=lambda x: x["buy_score"], reverse=True)
+        _stocks_cache["data"] = results
+        _stocks_cache["ts"]   = now
+        return {"stocks": results}
+    except Exception as e:
+        return {"stocks": [], "error": str(e)}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# APPLE CALENDAR
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.get("/calendar/today")
+async def calendar_today():
+    from datetime import date
+    today = date.today().strftime("%Y-%m-%d")
+    script = f'''
+tell application "Calendar"
+    set todayStart to current date
+    set hours of todayStart to 0
+    set minutes of todayStart to 0
+    set seconds of todayStart to 0
+    set todayEnd to todayStart + (86399)
+    set evtList to {{}}
+    repeat with cal in (every calendar whose name is in {{"Home", "Work", "Jordan's Bills", "Scheduled Reminders"}})
+        repeat with evt in (every event of cal whose start date >= todayStart and start date <= todayEnd)
+            set evtTitle to summary of evt
+            set evtStart to start date of evt
+            set evtEnd to end date of evt
+            set end of evtList to (evtTitle & "|" & (evtStart as string) & "|" & (evtEnd as string))
+        end repeat
+    end repeat
+    return evtList
+end tell'''
+    try:
+        result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True, timeout=10)
+        raw = result.stdout.strip()
+        events = []
+        if raw and raw != "{}":
+            for item in raw.split(", "):
+                parts = item.strip().split("|")
+                if len(parts) >= 2:
+                    events.append({"title": parts[0], "start": parts[1], "end": parts[2] if len(parts) > 2 else ""})
+        return {"date": today, "events": events}
+    except Exception as e:
+        return {"date": today, "events": [], "error": str(e)}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# HYDRATION
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.get("/hydration/today")
+async def hydration_today():
+    from database import im_get_log
+    from datetime import date
+    today = date.today().strftime("%Y-%m-%d")
+    log = im_get_log(today) or {}
+    oz = log.get("hydration_oz") or 0
+    goal = 100  # oz daily goal
+    return {"oz": oz, "goal": goal, "pct": round(oz / goal * 100) if goal else 0}
+
+@app.post("/hydration/log")
+async def hydration_log(req: Request):
+    from database import im_save_log
+    from datetime import date
+    body = await req.json()
+    oz = int(body.get("oz", 8))
+    today = date.today().strftime("%Y-%m-%d")
+    from database import im_get_log
+    current = (im_get_log(today) or {}).get("hydration_oz") or 0
+    im_save_log(today, hydration_oz=current + oz)
+    return {"ok": True, "total_oz": current + oz}
 
 
 if __name__ == "__main__":

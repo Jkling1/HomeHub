@@ -178,6 +178,37 @@ def init_db():
             );
             INSERT OR IGNORE INTO preferences (key, value) VALUES ('name', 'Jordan');
             INSERT OR IGNORE INTO preferences (key, value) VALUES ('location', 'Rockford, IL');
+            CREATE TABLE IF NOT EXISTS daily_prep (
+                date            TEXT PRIMARY KEY,
+                briefing_text   TEXT,
+                adapted_training TEXT,
+                adapted_nutrition TEXT,
+                fatigue_score   INTEGER DEFAULT 0,
+                completion_yesterday REAL DEFAULT 0,
+                notes           TEXT,
+                created_at      TEXT DEFAULT (datetime('now','localtime'))
+            );
+            CREATE TABLE IF NOT EXISTS recipes (
+                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                name         TEXT NOT NULL,
+                calories     INTEGER,
+                protein_g    INTEGER,
+                carbs_g      INTEGER,
+                fats_g       INTEGER,
+                ingredients  TEXT,
+                instructions TEXT,
+                why          TEXT,
+                tags         TEXT,
+                favorited    INTEGER DEFAULT 0,
+                created_at   TEXT DEFAULT (datetime('now','localtime'))
+            );
+            CREATE TABLE IF NOT EXISTS grocery_items (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                item       TEXT NOT NULL,
+                quantity   TEXT,
+                checked    INTEGER DEFAULT 0,
+                created_at TEXT DEFAULT (datetime('now','localtime'))
+            );
         """)
 
 
@@ -639,6 +670,91 @@ def delete_scene(name: str):
     else:
         with get_conn() as conn:
             conn.execute("DELETE FROM scenes WHERE lower(name)=lower(?)", (name,))
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# DAILY PREP (5 AM pre-calculated plan)
+# ══════════════════════════════════════════════════════════════════════════════
+
+def daily_prep_save(date: str, **fields):
+    allowed = {"briefing_text", "adapted_training", "adapted_nutrition",
+               "fatigue_score", "completion_yesterday", "notes"}
+    data = {k: v for k, v in fields.items() if k in allowed and v is not None}
+    if not data:
+        return
+    with get_conn() as conn:
+        cols = ", ".join(data.keys())
+        placeholders = ", ".join("?" * len(data))
+        conn.execute(
+            f"INSERT INTO daily_prep (date, {cols}) VALUES (?, {placeholders}) "
+            f"ON CONFLICT(date) DO UPDATE SET {', '.join(f'{k}=excluded.{k}' for k in data)}",
+            [date] + list(data.values()),
+        )
+
+
+def daily_prep_get(date: str) -> dict:
+    with get_conn() as conn:
+        row = conn.execute("SELECT * FROM daily_prep WHERE date=?", (date,)).fetchone()
+    return dict(row) if row else {}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# NUTRITION
+# ══════════════════════════════════════════════════════════════════════════════
+
+def recipe_save(data: dict) -> int:
+    with get_conn() as conn:
+        cur = conn.execute(
+            """INSERT INTO recipes (name, calories, protein_g, carbs_g, fats_g, ingredients, instructions, why, tags)
+               VALUES (?,?,?,?,?,?,?,?,?)""",
+            (data.get("name"), data.get("calories"), data.get("protein_g"),
+             data.get("carbs_g"), data.get("fats_g"),
+             json.dumps(data.get("ingredients", [])),
+             data.get("instructions"), data.get("why"),
+             json.dumps(data.get("tags", [])))
+        )
+        return cur.lastrowid
+
+def recipe_list() -> list:
+    with get_conn() as conn:
+        rows = conn.execute("SELECT * FROM recipes ORDER BY favorited DESC, created_at DESC").fetchall()
+    result = []
+    for r in rows:
+        d = dict(r)
+        d["ingredients"] = json.loads(d.get("ingredients") or "[]")
+        d["tags"]        = json.loads(d.get("tags") or "[]")
+        result.append(d)
+    return result
+
+def recipe_delete(recipe_id: int):
+    with get_conn() as conn:
+        conn.execute("DELETE FROM recipes WHERE id=?", (recipe_id,))
+
+def recipe_favorite(recipe_id: int, state: int):
+    with get_conn() as conn:
+        conn.execute("UPDATE recipes SET favorited=? WHERE id=?", (state, recipe_id))
+
+def grocery_list_get() -> list:
+    with get_conn() as conn:
+        rows = conn.execute("SELECT * FROM grocery_items ORDER BY checked ASC, created_at DESC").fetchall()
+    return [dict(r) for r in rows]
+
+def grocery_add(item: str, quantity: str = "") -> int:
+    with get_conn() as conn:
+        cur = conn.execute("INSERT INTO grocery_items (item, quantity) VALUES (?,?)", (item, quantity))
+        return cur.lastrowid
+
+def grocery_toggle(item_id: int, checked: int):
+    with get_conn() as conn:
+        conn.execute("UPDATE grocery_items SET checked=? WHERE id=?", (checked, item_id))
+
+def grocery_delete(item_id: int):
+    with get_conn() as conn:
+        conn.execute("DELETE FROM grocery_items WHERE id=?", (item_id,))
+
+def grocery_clear_checked():
+    with get_conn() as conn:
+        conn.execute("DELETE FROM grocery_items WHERE checked=1")
 
 
 # ══════════════════════════════════════════════════════════════════════════════

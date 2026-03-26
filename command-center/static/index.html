@@ -621,6 +621,39 @@ input[type=checkbox] { accent-color: var(--cyan); width: 16px; height: 16px; cur
 .weather-desc { font-size: .85rem; color: var(--text2); margin-top: .3rem; }
 .weather-meta { font-size: .75rem; color: var(--muted); margin-top: .5rem; }
 
+/* ── Animated Weather Icons ── */
+.wx-icon { width:64px; height:64px; position:relative; margin-bottom:.5rem; flex-shrink:0; }
+
+/* Sun */
+.wx-sun-core { position:absolute; top:50%; left:50%; width:24px; height:24px; margin:-12px 0 0 -12px; border-radius:50%; background:#fbbf24; box-shadow:0 0 12px 4px rgba(251,191,36,.5); animation:wx-pulse 2.5s ease-in-out infinite; }
+.wx-sun-ray { position:absolute; top:50%; left:50%; width:4px; height:10px; margin-left:-2px; background:#fbbf24; border-radius:2px; transform-origin:50% 200%; animation:wx-spin 8s linear infinite; }
+@keyframes wx-spin { to { transform: rotate(360deg); } }
+@keyframes wx-pulse { 0%,100%{box-shadow:0 0 12px 4px rgba(251,191,36,.5)} 50%{box-shadow:0 0 20px 8px rgba(251,191,36,.7)} }
+
+/* Cloud */
+.wx-cloud { position:absolute; background:rgba(200,210,230,.85); border-radius:20px; animation:wx-drift 4s ease-in-out infinite; }
+.wx-cloud-main { bottom:12px; left:8px; width:44px; height:22px; }
+.wx-cloud-puff { bottom:22px; left:14px; width:26px; height:26px; border-radius:50%; }
+.wx-cloud-puff2 { bottom:22px; left:26px; width:20px; height:20px; border-radius:50%; }
+@keyframes wx-drift { 0%,100%{transform:translateX(0)} 50%{transform:translateX(4px)} }
+
+/* Partly cloudy sun behind cloud */
+.wx-pc-sun { position:absolute; top:4px; right:4px; width:28px; height:28px; border-radius:50%; background:#fbbf24; box-shadow:0 0 10px 3px rgba(251,191,36,.45); animation:wx-pulse 2.5s ease-in-out infinite; }
+
+/* Rain drops */
+.wx-drop { position:absolute; width:2px; border-radius:2px; background:rgba(96,165,250,.8); animation:wx-rain linear infinite; }
+@keyframes wx-rain { 0%{transform:translateY(-10px);opacity:0} 20%{opacity:1} 100%{transform:translateY(30px);opacity:0} }
+
+/* Lightning */
+.wx-bolt { position:absolute; top:8px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-top:20px solid #fbbf24; filter:drop-shadow(0 0 6px #fbbf24); animation:wx-bolt 2s ease-in-out infinite; }
+.wx-bolt::after { content:''; position:absolute; top:-20px; left:-5px; width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-top:14px solid #fbbf24; }
+@keyframes wx-bolt { 0%,100%{opacity:.3} 50%{opacity:1} }
+
+/* Snowflakes */
+.wx-flake { position:absolute; border-radius:50%; background:#bfdbfe; animation:wx-snow linear infinite; }
+@keyframes wx-snow { 0%{transform:translateY(-8px) rotate(0deg);opacity:0} 20%{opacity:1} 100%{transform:translateY(36px) rotate(180deg);opacity:0} }
+@keyframes hr-beat { 0%,100%{transform:scale(1)} 14%{transform:scale(1.35)} 28%{transform:scale(1)} 42%{transform:scale(1.18)} 56%{transform:scale(1)} }
+
 /* ══════════════════════════════════════════════════════════
    MUSIC PLAYER
 ══════════════════════════════════════════════════════════ */
@@ -833,6 +866,31 @@ input[type=checkbox] { accent-color: var(--cyan); width: 16px; height: 16px; cur
 
 /* ── DJ active button ── */
 .dj-active { background:rgba(124,58,237,.3) !important; color:#fff !important; border-color:rgba(124,58,237,.6) !important; }
+.vibe-active { background:rgba(6,182,212,.2) !important; color:var(--cyan) !important; border-color:rgba(6,182,212,.5) !important; }
+.nopt-active { background:rgba(52,211,153,.15) !important; color:var(--green) !important; border-color:rgba(52,211,153,.4) !important; }
+.ntab-active { background:rgba(255,255,255,.1) !important; color:var(--text1) !important; border-color:rgba(255,255,255,.2) !important; }
+.macro-pill { font-size:.75rem; padding:.2rem .55rem; border-radius:6px; font-weight:600; }
+.recipe-card { padding:.75rem; background:var(--bg3); border-radius:10px; border:1px solid rgba(255,255,255,.07); cursor:pointer; transition:background .15s; }
+.recipe-card:hover { background:var(--bg4); }
+.recipe-card-header { display:flex; justify-content:space-between; align-items:flex-start; gap:.5rem; }
+.recipe-card-name { font-size:.92rem; font-weight:600; color:var(--text1); }
+.recipe-card-macros { font-size:.72rem; color:var(--text3); margin-top:.25rem; }
+.recipe-expand { font-size:.78rem; color:var(--text2); line-height:1.6; margin-top:.6rem; padding-top:.6rem; border-top:1px solid rgba(255,255,255,.06); }
+.g-item-row { display:flex; align-items:center; gap:.5rem; padding:.4rem .5rem; border-radius:8px; transition:background .15s; }
+.g-item-row:hover { background:rgba(255,255,255,.04); }
+.g-item-check { width:16px; height:16px; accent-color:var(--green); cursor:pointer; flex-shrink:0; }
+.g-item-label { flex:1; font-size:.86rem; color:var(--text1); }
+.g-item-label.done { text-decoration:line-through; color:var(--text3); }
+.g-item-qty { font-size:.75rem; color:var(--muted); min-width:40px; text-align:right; }
+.g-del-btn { background:none; border:none; color:var(--text3); cursor:pointer; font-size:.85rem; padding:.1rem .3rem; opacity:.5; }
+.g-del-btn:hover { opacity:1; color:var(--red); }
+.vibe-track { display:flex; align-items:flex-start; gap:.6rem; padding:.5rem .6rem; background:rgba(255,255,255,.03); border-radius:8px; border:1px solid rgba(255,255,255,.06); cursor:pointer; transition:background .15s; }
+.vibe-track:hover { background:rgba(6,182,212,.08); border-color:rgba(6,182,212,.2); }
+.vibe-track-num { font-size:.72rem; color:var(--muted); font-family:var(--mono); min-width:16px; margin-top:.1rem; }
+.vibe-track-info { flex:1 }
+.vibe-track-title { font-size:.88rem; font-weight:600; color:var(--text1); }
+.vibe-track-artist { font-size:.75rem; color:var(--cyan); margin:.05rem 0 .2rem; }
+.vibe-track-reason { font-size:.72rem; color:var(--text3); line-height:1.4; }
 
 /* ══════════════════════════════════════════════════════════
    HISTORY TABLE
@@ -1507,6 +1565,215 @@ textarea { resize: vertical; min-height: 70px; }
   font-size: .85rem; color: var(--text);
 }
 .chat-input-bar input:focus { outline: none; border-color: rgba(0,212,255,.4); }
+
+/* ══════════════════════════════════════════════════════════
+   AGENT STATUS BAR
+══════════════════════════════════════════════════════════ */
+#agent-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: .35rem .9rem;
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 1rem;
+  font-size: .68rem;
+  color: var(--muted);
+  font-family: var(--mono);
+  flex-wrap: wrap;
+  overflow: hidden;
+}
+#agent-status-bar span { display: flex; align-items: center; gap: .35rem; white-space: nowrap; }
+#agent-status-bar .asb-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+}
+.asb-dot-green  { background: var(--green);  box-shadow: 0 0 5px var(--green); }
+.asb-dot-yellow { background: var(--yellow); box-shadow: 0 0 5px var(--yellow); }
+.asb-dot-red    { background: var(--red);    box-shadow: 0 0 5px var(--red); }
+.asb-dot-dim    { background: var(--muted);  }
+
+/* ══════════════════════════════════════════════════════════
+   HOME BIG ROCK SECTION
+══════════════════════════════════════════════════════════ */
+.home-rock-section {
+  margin-bottom: 1rem;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 1rem 1.2rem;
+  backdrop-filter: blur(20px);
+  position: relative; overflow: hidden;
+}
+.home-rock-section::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 80% at 20% 50%, rgba(0,212,255,.04), transparent);
+  pointer-events: none;
+}
+.home-big-rock-row {
+  display: flex; align-items: center; gap: .85rem; margin-bottom: .75rem;
+}
+.home-big-rock-circle {
+  width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+  border: 2px solid rgba(0,212,255,.4);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .2s; background: rgba(0,212,255,.06);
+  font-size: 1.1rem;
+}
+.home-big-rock-circle:hover { border-color: var(--cyan); background: rgba(0,212,255,.12); transform: scale(1.05); }
+.home-big-rock-circle.done  { background: rgba(0,212,255,.18); border-color: var(--cyan); }
+.home-big-rock-info { flex: 1; min-width: 0; }
+.home-big-rock-title {
+  font-size: .92rem; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.home-big-rock-status { font-size: .68rem; color: var(--muted); margin-top: .15rem; font-family: var(--mono); }
+.home-medium-chips {
+  display: flex; gap: .4rem; flex-wrap: wrap; padding-top: .5rem;
+  border-top: 1px solid var(--glass-border);
+}
+.home-med-chip {
+  display: inline-flex; align-items: center; gap: .3rem;
+  padding: .25rem .6rem; border-radius: 999px;
+  font-size: .65rem; font-weight: 600;
+  background: rgba(255,255,255,.05); border: 1px solid var(--glass-border);
+  color: var(--text2); cursor: pointer; transition: all .15s;
+}
+.home-med-chip.done { background: rgba(0,212,255,.1); border-color: rgba(0,212,255,.3); color: var(--cyan); }
+.home-med-chip:hover { border-color: rgba(0,212,255,.3); }
+
+/* ══════════════════════════════════════════════════════════
+   HOME METRICS STRIP
+══════════════════════════════════════════════════════════ */
+.home-metrics-strip {
+  display: flex; gap: .5rem; align-items: stretch; flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.home-metric-chip {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: var(--bg4); border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm); padding: .5rem .75rem;
+  flex: 1; min-width: 70px; text-align: center;
+}
+.home-metric-chip .hmc-val { font-family: var(--mono); font-size: 1rem; font-weight: 700; color: var(--cyan); }
+.home-metric-chip .hmc-lbl { font-size: .6rem; color: var(--muted); margin-top: .15rem; }
+.home-metric-chip .hmc-icon { font-size: .9rem; margin-bottom: .1rem; }
+
+/* ══════════════════════════════════════════════════════════
+   QUICK LOG FAB
+══════════════════════════════════════════════════════════ */
+#quick-log-fab {
+  position: fixed; bottom: 90px; right: 1.5rem;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--cyan), var(--violet));
+  color: #fff; font-size: 1.4rem; font-weight: 700;
+  border: none; cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0,212,255,.35), 0 2px 8px rgba(0,0,0,.3);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+  transition: transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s;
+}
+#quick-log-fab:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(0,212,255,.5); }
+#quick-log-fab:active { transform: scale(.95); }
+
+/* Quick Log modal */
+#quick-log-modal {
+  position: fixed; bottom: 155px; right: 1.5rem;
+  width: 280px;
+  background: var(--bg3); border: 1px solid var(--glass-border);
+  border-radius: var(--radius); padding: 1rem 1.1rem;
+  box-shadow: 0 16px 48px rgba(0,0,0,.5);
+  z-index: 999;
+  display: none;
+  flex-direction: column; gap: .65rem;
+  animation: fab-modal-in .22s cubic-bezier(.34,1.2,.64,1);
+}
+@keyframes fab-modal-in {
+  from { opacity:0; transform: translateY(12px) scale(.96); }
+  to   { opacity:1; transform: translateY(0) scale(1); }
+}
+#quick-log-modal .qlm-title {
+  font-size: .7rem; font-family: var(--mono); letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: .2rem;
+}
+#quick-log-modal .qlm-btns { display: flex; gap: .4rem; flex-wrap: wrap; }
+#quick-log-modal .qlm-btn {
+  flex: 1; padding: .45rem .6rem; border-radius: var(--radius-sm);
+  background: var(--bg4); border: 1px solid var(--glass-border);
+  color: var(--text); font-size: .75rem; cursor: pointer;
+  transition: all .15s; white-space: nowrap; min-width: 80px;
+}
+#quick-log-modal .qlm-btn:hover { background: var(--bg5); border-color: rgba(0,212,255,.25); }
+#quick-log-modal .qlm-btn.active { background: rgba(0,212,255,.12); border-color: var(--cyan); color: var(--cyan); }
+.qlm-mood-row { display: flex; align-items: center; gap: .4rem; }
+.qlm-mood-emojis { display: flex; gap: .2rem; }
+.qlm-mood-emojis span {
+  font-size: 1.1rem; cursor: pointer; opacity: .5; transition: opacity .15s, transform .15s;
+}
+.qlm-mood-emojis span.active { opacity: 1; transform: scale(1.2); }
+#quick-log-close {
+  position: absolute; top: .6rem; right: .6rem;
+  background: none; border: none; color: var(--muted);
+  cursor: pointer; font-size: 1rem; padding: .15rem .4rem;
+  border-radius: 4px; transition: color .15s;
+}
+#quick-log-close:hover { color: var(--text); }
+
+/* ══════════════════════════════════════════════════════════
+   MOBILE BOTTOM TAB BAR
+══════════════════════════════════════════════════════════ */
+.mobile-tabs { display: none; }
+@media (max-width: 768px) {
+  .sidebar { display: none !important; }
+  .mobile-tabs {
+    display: flex; position: fixed; bottom: 0; left: 0; right: 0;
+    height: 60px; background: var(--bg2);
+    border-top: 1px solid var(--glass-border);
+    z-index: 200;
+  }
+  .main { margin-left: 0 !important; padding-bottom: 70px; }
+  .cmd-float { width: calc(100vw - 2rem); left: 1rem; right: 1rem; transform: none; }
+  #quick-log-fab { bottom: 72px; }
+  #quick-log-modal { bottom: 135px; right: 1rem; width: calc(100vw - 2rem); }
+}
+.mobile-tabs button {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: .18rem; background: none; border: none; color: var(--text2);
+  font-size: .65rem; cursor: pointer; transition: color .15s;
+  padding: .3rem 0;
+}
+.mobile-tabs button:hover { color: var(--text); }
+.mobile-tabs button.active { color: var(--cyan); }
+.mobile-tabs button span { font-size: .7rem; }
+.mobile-tabs button .tab-icon { font-size: 1.15rem; }
+
+/* ══════════════════════════════════════════════════════════
+   TODAY PANEL
+══════════════════════════════════════════════════════════ */
+.today-rock-big {
+  display: flex; align-items: center; gap: .9rem;
+  padding: .85rem 1rem; background: rgba(0,212,255,.05);
+  border: 1px solid rgba(0,212,255,.15); border-radius: var(--radius-sm);
+  margin-bottom: .65rem; cursor: pointer; transition: border-color .2s;
+}
+.today-rock-big:hover { border-color: rgba(0,212,255,.3); }
+.today-big-circle {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  border: 2px solid rgba(0,212,255,.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; background: rgba(0,212,255,.08);
+  transition: all .2s;
+}
+.today-big-circle.done { background: rgba(0,212,255,.2); border-color: var(--cyan); }
+.today-rock-chips { display: flex; gap: .35rem; flex-wrap: wrap; }
+.today-rock-chip {
+  display: inline-flex; align-items: center; gap: .25rem;
+  padding: .3rem .65rem; border-radius: 999px; font-size: .68rem; font-weight: 600;
+  background: var(--bg4); border: 1px solid var(--glass-border);
+  cursor: pointer; transition: all .15s;
+}
+.today-rock-chip.done { background: rgba(0,212,255,.1); border-color: rgba(0,212,255,.3); color: var(--cyan); }
 </style>
 </head>
 <body>
@@ -1537,14 +1804,17 @@ textarea { resize: vertical; min-height: 70px; }
     <button class="nav-item active" onclick="switchPanel('home',this)">
       <span class="nav-icon">🏠</span><span class="nav-label">Home</span>
     </button>
+    <button class="nav-item" onclick="switchPanel('today',this)">
+      <span class="nav-icon">📋</span><span class="nav-label">Today</span>
+    </button>
     <button class="nav-item" onclick="switchPanel('ironmind',this)">
       <span class="nav-icon">🧠</span><span class="nav-label">IronMind</span>
     </button>
-    <button class="nav-item" onclick="switchPanel('lights',this)">
-      <span class="nav-icon">💡</span><span class="nav-label">Lights</span>
+    <button class="nav-item" onclick="switchPanel('homehub',this)">
+      <span class="nav-icon">🎛</span><span class="nav-label">HomeHub</span>
     </button>
-    <button class="nav-item" onclick="switchPanel('music',this)">
-      <span class="nav-icon">🎵</span><span class="nav-label">Music</span>
+    <button class="nav-item" onclick="switchPanel('nutrition',this)">
+      <span class="nav-icon">🥗</span><span class="nav-label">Nutrition</span>
     </button>
     <button class="nav-item" onclick="switchPanel('intel',this)">
       <span class="nav-icon">📡</span><span class="nav-label">Intel</span>
@@ -1569,6 +1839,14 @@ textarea { resize: vertical; min-height: 70px; }
 ═══════════════════════════════════════════════════════ -->
 <div class="main" id="main">
 
+  <!-- ── AGENT STATUS BAR (always visible inside main) ── -->
+  <div id="agent-status-bar">
+    <span><span class="asb-dot asb-dot-dim" id="asb-dot-evolve"></span><span id="asb-evolve">⚙️ EVOLVE —</span></span>
+    <span><span class="asb-dot asb-dot-dim" id="asb-dot-morning"></span><span id="asb-morning">☀️ Morning —</span></span>
+    <span><span class="asb-dot asb-dot-dim" id="asb-dot-hub"></span><span id="asb-server">🟢 Hub Online</span></span>
+    <span style="margin-left:auto;opacity:.5;font-size:.62rem" id="asb-last-update"></span>
+  </div>
+
   <!-- ── HOME ── -->
   <div class="panel active" id="panel-home">
 
@@ -1591,11 +1869,24 @@ textarea { resize: vertical; min-height: 70px; }
       </div>
     </div>
 
-    <!-- ── ROW 1: Weather | Music | Lights ── -->
+    <!-- ── ZONE 2: Big Rock + Medium Rocks ── -->
+    <div class="home-rock-section" id="home-rock-section">
+      <div class="card-label" style="margin-bottom:.7rem;display:flex;justify-content:space-between;align-items:center">
+        <span><span class="dot dot-cyan"></span> Today's Rocks</span>
+        <button class="btn btn-sm" style="font-size:.62rem;padding:.2rem .55rem" onclick="switchPanel('rocks',document.querySelector('.nav-item[onclick*=\"rocks\"]'))">View All →</button>
+      </div>
+      <div id="home-rock-big-area">
+        <div class="skel skel-text" style="margin-bottom:.5rem"></div>
+        <div class="skel skel-text sm"></div>
+      </div>
+    </div>
+
+    <!-- ── ZONE 3: Weather | Music | Lights ── -->
     <div class="grid g3" style="margin-bottom:1rem">
       <!-- Weather -->
       <div class="card">
         <div class="card-label"><span class="dot"></span> Rockford, IL</div>
+        <div id="h-wx-icon"></div>
         <div class="weather-temp" id="h-temp"><div class="skel skel-text lg" style="width:100px"></div></div>
         <div class="weather-desc" id="h-desc"><div class="skel skel-text sm" style="margin-top:.5rem"></div></div>
         <div class="weather-meta" id="h-meta"></div>
@@ -1636,16 +1927,89 @@ textarea { resize: vertical; min-height: 70px; }
       </div>
     </div>
 
-    <!-- ── TOP NEWS ── -->
-    <div class="card" style="margin-bottom:1rem">
-      <div class="card-label" style="display:flex;justify-content:space-between;align-items:center">
-        <span><span class="dot dot-orange"></span> Top Headlines</span>
-        <button class="btn btn-sm" onclick="loadNews()" style="font-size:.65rem;padding:.2rem .6rem">↺ Refresh</button>
+    <!-- ── ZONE 4: Compact Metrics Strip ── -->
+    <div class="home-metrics-strip" id="home-metrics-strip">
+      <div class="home-metric-chip">
+        <div class="hmc-icon">👟</div>
+        <div class="hmc-val" id="hms-steps">--</div>
+        <div class="hmc-lbl">Steps</div>
       </div>
-      <div id="home-news" class="news-grid">
-        <div class="skel skel-text" style="margin-bottom:.5rem"></div>
-        <div class="skel skel-text sm"></div>
+      <div class="home-metric-chip">
+        <div class="hmc-icon" id="hms-hr-icon" style="font-size:1.1rem;animation:hr-beat 0.85s ease-in-out infinite">❤️</div>
+        <div class="hmc-val" id="hms-hr" style="color:var(--red)">72<span style="font-size:.6rem;font-weight:400;color:var(--muted);margin-left:1px">bpm</span></div>
+        <div class="hmc-lbl">Heart Rate</div>
       </div>
+      <div class="home-metric-chip">
+        <div class="hmc-icon">💧</div>
+        <div class="hmc-val" id="hms-hydration">--</div>
+        <div class="hmc-lbl">oz Water</div>
+      </div>
+      <div class="home-metric-chip">
+        <div class="hmc-icon">😴</div>
+        <div class="hmc-val" id="hms-sleep">--</div>
+        <div class="hmc-lbl">hrs Sleep</div>
+      </div>
+      <div class="home-metric-chip">
+        <div class="hmc-icon">🏋️</div>
+        <div class="hmc-val" id="hms-workout" style="font-size:.8rem">—</div>
+        <div class="hmc-lbl">Workout</div>
+      </div>
+    </div>
+
+    <!-- ── ZONE 5: News + Stocks 2-col ── -->
+    <div class="grid g2" style="margin-bottom:1rem">
+      <!-- Top Headlines -->
+      <div class="card">
+        <div class="card-label" style="display:flex;justify-content:space-between;align-items:center">
+          <span><span class="dot dot-orange"></span> Top Headlines</span>
+          <button class="btn btn-sm" onclick="loadNews()" style="font-size:.65rem;padding:.2rem .6rem">↺ Refresh</button>
+        </div>
+        <div id="home-news" style="display:flex;flex-direction:column;gap:.5rem;margin-top:.3rem">
+          <div class="skel skel-text" style="margin-bottom:.5rem"></div>
+          <div class="skel skel-text sm"></div>
+        </div>
+      </div>
+      <!-- Stocks -->
+      <div class="card">
+        <div class="card-label" style="display:flex;justify-content:space-between;align-items:center">
+          <span><span class="dot dot-green"></span> Market Watchlist</span>
+          <button class="btn btn-sm" onclick="loadStocks()" style="font-size:.65rem;padding:.2rem .6rem">↺</button>
+        </div>
+        <div id="stocks-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.5rem;margin-top:.5rem">
+          <div class="skel skel-text" style="height:56px;border-radius:10px"></div>
+          <div class="skel skel-text" style="height:56px;border-radius:10px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Hydration + Calendar (compact, below main) ── -->
+    <div class="grid g2" style="margin-bottom:1rem">
+      <div class="card" style="padding:.8rem 1rem">
+        <div class="card-label" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+          <span><span class="dot" style="background:var(--cyan)"></span> Hydration</span>
+          <span id="hydration-oz-txt" style="font-size:.7rem;color:var(--text2)">0 / 100 oz</span>
+        </div>
+        <div style="position:relative;height:6px;background:var(--bg4);border-radius:99px;overflow:hidden;margin-bottom:.5rem">
+          <div id="hydration-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--cyan),var(--violet));border-radius:99px;transition:width .8s cubic-bezier(.4,0,.2,1)"></div>
+        </div>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+          <button class="btn btn-sm" onclick="logHydration(8)">+ 8oz</button>
+          <button class="btn btn-sm" onclick="logHydration(16)">+ 16oz</button>
+          <button class="btn btn-sm" onclick="logHydration(32)">+ 32oz</button>
+        </div>
+      </div>
+      <div class="card" style="padding:.8rem 1rem">
+        <div class="card-label" style="margin-bottom:.5rem"><span class="dot dot-orange"></span> Today's Schedule</div>
+        <div id="cal-events" style="font-size:.78rem;line-height:1.7;color:var(--text2)">
+          <div class="skel skel-text sm"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden protocol card (still loads, just not displayed on home) -->
+    <div id="protocol-card" style="display:none">
+      <span id="protocol-time"></span>
+      <div id="protocol-body"></div>
     </div>
 
     <!-- ── IronMind Quick ── -->
@@ -1665,6 +2029,63 @@ textarea { resize: vertical; min-height: 70px; }
 
     <!-- Hidden anchor for chat expand animation -->
     <div id="feed-card" style="position:fixed;bottom:80px;right:2rem;width:220px;height:48px;pointer-events:none;opacity:0;z-index:-1"></div>
+  </div>
+
+  <!-- ── YOU ROCK CELEBRATION OVERLAY ── -->
+  <div id="you-rock-overlay" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);flex-direction:column;align-items:center;justify-content:center;cursor:pointer" onclick="dismissYouRock()">
+    <canvas id="you-rock-confetti" style="position:absolute;inset:0;pointer-events:none"></canvas>
+    <svg id="you-rock-check" viewBox="0 0 120 120" style="width:160px;height:160px;margin-bottom:1.5rem">
+      <circle cx="60" cy="60" r="54" fill="none" stroke="var(--green)" stroke-width="5"
+              stroke-dasharray="339" stroke-dashoffset="339"
+              style="transition:stroke-dashoffset .7s cubic-bezier(.4,0,.2,1);transform-origin:center;transform:rotate(-90deg)"/>
+      <polyline points="32,62 52,82 88,40" fill="none" stroke="var(--green)" stroke-width="5.5"
+                stroke-linecap="round" stroke-linejoin="round"
+                stroke-dasharray="80" stroke-dashoffset="80"
+                style="transition:stroke-dashoffset .45s .65s cubic-bezier(.4,0,.2,1)"/>
+    </svg>
+    <div id="you-rock-text" style="font-family:var(--mono);font-size:3rem;font-weight:700;color:#fff;letter-spacing:.05em;opacity:0;transform:scale(.7);transition:opacity .4s .9s,transform .4s .9s cubic-bezier(.34,1.56,.64,1)">YOU ROCK!</div>
+    <div style="color:var(--text2);font-size:.85rem;margin-top:1.2rem;opacity:0;transition:opacity .3s 1.3s" id="you-rock-sub">All rocks complete · Tap to dismiss</div>
+  </div>
+
+  <!-- ── TODAY (merged rocks + log) ── -->
+  <div class="panel" id="panel-today">
+    <div class="page-header">
+      <h2>📋 Today</h2>
+      <p>Your rocks, metrics, and reflection — all in one place.</p>
+    </div>
+
+    <!-- Today's Rocks (compact) -->
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-label" style="display:flex;justify-content:space-between;align-items:center">
+        <span><span class="dot dot-cyan"></span> Today's Rocks</span>
+        <button class="btn btn-sm" style="font-size:.62rem" onclick="switchPanel('rocks',document.querySelector('.nav-item[onclick*=\"rocks\"]'))">Full View →</button>
+      </div>
+      <div id="today-rocks-area">
+        <div class="skel skel-text" style="margin-bottom:.5rem"></div>
+        <div class="skel skel-text sm"></div>
+      </div>
+    </div>
+
+    <!-- Daily Metrics -->
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-label"><span class="dot dot-green"></span> Daily Log</div>
+      <div class="metric-grid" id="today-metrics-grid">
+        <div class="skel skel-text" style="margin-bottom:.5rem"></div>
+      </div>
+      <button class="btn btn-accent btn-sm" style="margin-top:.75rem;width:100%" onclick="saveTodayMetrics()">Save Metrics →</button>
+    </div>
+
+    <!-- Daily Reflection -->
+    <div class="card" id="today-reflection-card">
+      <div class="card-label"><span class="dot dot-orange"></span> Daily Reflection</div>
+      <div id="today-reflection-form" style="display:flex;flex-direction:column;gap:.5rem">
+        <textarea id="tr-right" placeholder="What went right today..." style="min-height:60px"></textarea>
+        <textarea id="tr-corners" placeholder="Where did I cut corners..." style="min-height:50px"></textarea>
+        <textarea id="tr-tomorrow" placeholder="Tomorrow I will..." style="min-height:50px"></textarea>
+        <button class="btn btn-accent" onclick="saveTodayReflection()">Save Reflection</button>
+      </div>
+      <div id="today-reflection-done" style="display:none;text-align:center;padding:1rem;color:var(--green);font-weight:700">✓ Reflection Saved</div>
+    </div>
   </div>
 
   <!-- ── IRONMIND ── -->
@@ -1737,9 +2158,11 @@ textarea { resize: vertical; min-height: 70px; }
           <button class="btn btn-accent" onclick="sendCoachMsg()">→</button>
         </div>
       </div>
-      <div class="card">
+      <div class="card" id="reflection-card">
         <div class="card-label"><span class="dot dot-orange"></span> Daily Reflection</div>
-        <div style="display:flex;flex-direction:column;gap:.5rem">
+
+        <!-- Form -->
+        <div id="reflection-form" style="display:flex;flex-direction:column;gap:.5rem">
           <div>
             <div class="section-title">What went right</div>
             <textarea id="j-right" placeholder="What went right today..."></textarea>
@@ -1752,7 +2175,24 @@ textarea { resize: vertical; min-height: 70px; }
             <div class="section-title">Tomorrow's standard</div>
             <textarea id="j-tomorrow" placeholder="Tomorrow I will..." style="min-height:55px"></textarea>
           </div>
-          <button class="btn btn-accent" onclick="saveJournal()">Save Reflection</button>
+          <button class="btn btn-accent" id="reflection-save-btn" onclick="saveJournal()">Save Reflection</button>
+        </div>
+
+        <!-- Done state (shown after submit) -->
+        <div id="reflection-done" style="display:none;flex-direction:column;align-items:center;padding:1.5rem 0;gap:.75rem">
+          <canvas id="confetti-canvas" style="position:fixed;inset:0;pointer-events:none;z-index:9999;width:100%;height:100%"></canvas>
+          <svg id="reflection-check-svg" viewBox="0 0 80 80" style="width:90px;height:90px">
+            <circle cx="40" cy="40" r="36" fill="none" stroke="rgba(0,255,136,.15)" stroke-width="4"/>
+            <circle cx="40" cy="40" r="36" fill="none" stroke="var(--green)" stroke-width="4"
+              stroke-linecap="round" stroke-dasharray="226" stroke-dashoffset="226"
+              id="reflection-check-circle" style="transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset 0.6s cubic-bezier(.4,0,.2,1)"/>
+            <polyline points="22,40 34,52 58,28" fill="none" stroke="var(--green)" stroke-width="5"
+              stroke-linecap="round" stroke-linejoin="round"
+              stroke-dasharray="60" stroke-dashoffset="60"
+              id="reflection-check-tick" style="transition:stroke-dashoffset 0.4s cubic-bezier(.4,0,.2,1) 0.5s"/>
+          </svg>
+          <div style="font-size:1rem;font-weight:700;color:var(--green)">Reflection Saved</div>
+          <div style="font-size:.75rem;color:var(--muted);font-family:var(--mono)">Resets at 5:00 AM</div>
         </div>
       </div>
     </div>
@@ -1868,14 +2308,43 @@ textarea { resize: vertical; min-height: 70px; }
   </div>
 
   <!-- ── LIGHTS ── -->
-  <div class="panel" id="panel-lights">
+  <!-- ── HOMEHUB ── -->
+  <div class="panel" id="panel-homehub">
     <div class="page-header">
-      <h2>💡 Smart Lights</h2>
-      <p>Full Philips Hue control.</p>
+      <h2>🎛 HomeHub</h2>
     </div>
+
+    <!-- Row 1: Now Playing | Color Picker -->
     <div class="grid g2" style="margin-bottom:1rem">
+      <div class="card music-card" style="min-height:260px">
+        <div class="music-bg" id="m-bg"></div>
+        <div class="music-inner">
+          <div class="card-label"><span class="dot dot-violet"></span> Now Playing</div>
+          <div class="track-title" id="m-track" style="font-size:1.2rem">Nothing playing</div>
+          <div class="track-artist" id="m-artist" style="margin-bottom:.5rem"></div>
+          <div class="waveform" id="m-waveform" style="margin:.75rem 0"></div>
+          <div class="music-controls" style="margin-bottom:.75rem">
+            <button class="ctrl-btn" onclick="musicCmd('back')">⏮</button>
+            <button class="ctrl-btn ctrl-play" id="m-play-btn" onclick="togglePlay()">▶</button>
+            <button class="ctrl-btn" onclick="musicCmd('skip')">⏭</button>
+          </div>
+          <div class="vol-wrap">
+            <span class="vol-icon">🔈</span>
+            <input type="range" min="0" max="100" value="50" id="m-vol" oninput="setVol(this.value)">
+            <span style="font-family:var(--mono);font-size:.75rem;color:var(--cyan);min-width:24px" id="m-vol-val">50</span>
+            <span class="vol-icon">🔊</span>
+          </div>
+          <div style="margin-top:.75rem">
+            <div class="music-search">
+              <input type="text" id="m-search" placeholder="Search Apple Music..." style="flex:1">
+              <button class="btn btn-accent" onclick="musicSearch()">▶ Play</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="card card-glow">
-        <div class="card-label"><span class="dot"></span> Color Picker</div>
+        <div class="card-label"><span class="dot"></span> Lights</div>
         <div class="lights-layout">
           <div class="wheel-wrap">
             <div class="color-wheel" id="color-wheel" title="Click to pick color"></div>
@@ -1902,7 +2371,21 @@ textarea { resize: vertical; min-height: 70px; }
           </div>
         </div>
       </div>
-      <!-- Scenes -->
+    </div>
+
+    <!-- Row 2: Song Info | Scenes -->
+    <div class="grid g2">
+      <div class="card" id="song-info-card">
+        <div class="card-label" style="display:flex;justify-content:space-between;align-items:center">
+          <span><span class="dot dot-violet"></span> Song Info</span>
+          <span id="song-info-spinner" style="font-size:.7rem;color:var(--muted)"></span>
+        </div>
+        <div id="song-info-body">
+          <div class="skel skel-text" style="margin-bottom:.5rem"></div>
+          <div class="skel skel-text sm"></div>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-label"><span class="dot dot-violet"></span> Scenes</div>
         <div class="scenes-grid" id="scenes-grid"><div class="skel skel-block" style="border-radius:10px"></div></div>
@@ -1911,118 +2394,110 @@ textarea { resize: vertical; min-height: 70px; }
     </div>
   </div>
 
-  <!-- ── MUSIC ── -->
-  <div class="panel" id="panel-music">
+  <!-- ── NUTRITION ── -->
+  <div class="panel" id="panel-nutrition">
     <div class="page-header">
-      <h2>🎵 Apple Music</h2>
-      <p>Full playback control.</p>
+      <h2>🥗 Nutrition</h2>
     </div>
-    <div class="grid g2">
-      <div class="card music-card" style="min-height:280px">
-        <div class="music-bg" id="m-bg"></div>
-        <div class="music-inner">
-          <div class="card-label"><span class="dot dot-violet"></span> Now Playing</div>
-          <div class="track-title" id="m-track" style="font-size:1.2rem">Nothing playing</div>
-          <div class="track-artist" id="m-artist" style="margin-bottom:.5rem"></div>
-          <div class="waveform" id="m-waveform" style="margin:1rem 0"></div>
-          <div class="music-controls" style="margin-bottom:1rem">
-            <button class="ctrl-btn" onclick="musicCmd('back')">⏮</button>
-            <button class="ctrl-btn ctrl-play" id="m-play-btn" onclick="togglePlay()">▶</button>
-            <button class="ctrl-btn" onclick="musicCmd('skip')">⏭</button>
+
+    <!-- Sub-tabs -->
+    <div style="display:flex;gap:.4rem;margin-bottom:1.25rem;border-bottom:1px solid rgba(255,255,255,.07);padding-bottom:.75rem">
+      <button class="btn btn-sm ntab-active" id="ntab-gen"      onclick="nTab('gen')">✨ Generate</button>
+      <button class="btn btn-sm"             id="ntab-saved"    onclick="nTab('saved')">📚 Saved</button>
+      <button class="btn btn-sm"             id="ntab-grocery"  onclick="nTab('grocery')">🛒 Grocery</button>
+    </div>
+
+    <!-- GENERATE -->
+    <div id="nsec-gen">
+      <div class="card" style="margin-bottom:1rem">
+        <div class="card-label"><span class="dot dot-green"></span> Recipe Generator</div>
+        <div class="grid g2" style="margin-top:.75rem;gap:.75rem">
+          <div>
+            <div class="section-title" style="margin-bottom:.35rem">Goal</div>
+            <div style="display:flex;flex-wrap:wrap;gap:.35rem" id="ngoal-btns">
+              <button class="btn btn-sm nopt-active" data-ng="goal" data-val="endurance fuel" onclick="nOpt('goal',this)">🏊 Endurance</button>
+              <button class="btn btn-sm" data-ng="goal" data-val="muscle recovery"  onclick="nOpt('goal',this)">💪 Recovery</button>
+              <button class="btn btn-sm" data-ng="goal" data-val="fat loss"         onclick="nOpt('goal',this)">🔥 Cut</button>
+              <button class="btn btn-sm" data-ng="goal" data-val="muscle building"  onclick="nOpt('goal',this)">📈 Bulk</button>
+            </div>
           </div>
-          <div class="vol-wrap">
-            <span class="vol-icon">🔈</span>
-            <input type="range" min="0" max="100" value="50" id="m-vol" oninput="setVol(this.value)">
-            <span style="font-family:var(--mono);font-size:.75rem;color:var(--cyan);min-width:24px" id="m-vol-val">50</span>
-            <span class="vol-icon">🔊</span>
+          <div>
+            <div class="section-title" style="margin-bottom:.35rem">Cook Time</div>
+            <div style="display:flex;flex-wrap:wrap;gap:.35rem" id="ntime-btns">
+              <button class="btn btn-sm nopt-active" data-ng="cook_time" data-val="quick (under 15 min)" onclick="nOpt('cook_time',this)">⚡ Quick</button>
+              <button class="btn btn-sm" data-ng="cook_time" data-val="meal prep (30-45 min)" onclick="nOpt('cook_time',this)">📦 Meal Prep</button>
+              <button class="btn btn-sm" data-ng="cook_time" data-val="full cook (45+ min)"   onclick="nOpt('cook_time',this)">👨‍🍳 Full Cook</button>
+            </div>
           </div>
+        </div>
+        <div style="margin-top:.75rem">
+          <div class="section-title" style="margin-bottom:.35rem">Ingredients you have (optional)</div>
+          <input type="text" id="n-ingredients" placeholder="chicken, quinoa, spinach..." style="width:100%;background:var(--bg3);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:.5rem .75rem;color:var(--text1);font-size:.85rem">
+        </div>
+        <div style="margin-top:.75rem;display:flex;align-items:center;gap:.75rem">
+          <div>
+            <div class="section-title" style="margin-bottom:.35rem">Target Calories</div>
+            <input type="number" id="n-calories" value="600" min="200" max="1200" style="width:90px;background:var(--bg3);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:.45rem .6rem;color:var(--text1);font-size:.85rem;text-align:center">
+          </div>
+          <button class="btn btn-accent" style="margin-top:1.1rem;flex:1" id="n-gen-btn" onclick="generateRecipe()">✨ Generate Recipe</button>
         </div>
       </div>
-      <div>
-        <div class="card" style="margin-bottom:1rem">
-          <div class="card-label"><span class="dot dot-violet"></span> Search &amp; Play</div>
-          <div class="music-search">
-            <input type="text" id="m-search" placeholder="Artist, song, album..." style="flex:1">
-            <button class="btn btn-accent" onclick="musicSearch()">Play</button>
+
+      <!-- Result -->
+      <div id="n-result" style="display:none">
+        <div class="card" id="n-result-card" style="overflow:hidden;padding:0">
+          <!-- Hero photo -->
+          <div id="nr-photo-wrap" style="position:relative;width:100%;height:220px;background:var(--bg3);overflow:hidden">
+            <div id="nr-photo-skel" style="width:100%;height:100%;background:linear-gradient(110deg,var(--bg3) 30%,var(--bg4) 50%,var(--bg3) 70%);background-size:200% 100%;animation:shimmer 1.4s infinite"></div>
+            <img id="nr-photo" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .4s" onload="this.style.opacity=1;document.getElementById('nr-photo-skel').style.display='none'" onerror="document.getElementById('nr-photo-wrap').style.display='none'">
           </div>
-          <div class="section-title">Quick Play</div>
-          <div class="quick-plays" id="quick-plays">
-            <button class="quick-play-btn" onclick="musicPlay('Drake')">Drake</button>
-            <button class="quick-play-btn" onclick="musicPlay('Travis Scott')">Travis Scott</button>
-            <button class="quick-play-btn" onclick="musicPlay('Future')">Future</button>
-            <button class="quick-play-btn" onclick="musicPlay('Metro Boomin')">Metro Boomin</button>
-            <button class="quick-play-btn" onclick="musicPlay('21 Savage')">21 Savage</button>
-            <button class="quick-play-btn" onclick="musicPlay('Kendrick Lamar')">Kendrick</button>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-label"><span class="dot dot-violet"></span> Volume Presets</div>
-          <div style="display:flex;gap:.4rem;flex-wrap:wrap">
-            <button class="btn btn-sm" onclick="setVol(20)">20%</button>
-            <button class="btn btn-sm" onclick="setVol(40)">40%</button>
-            <button class="btn btn-sm" onclick="setVol(60)">60%</button>
-            <button class="btn btn-sm" onclick="setVol(80)">80%</button>
-            <button class="btn btn-sm" onclick="setVol(100)">100%</button>
+          <!-- Content -->
+          <div style="padding:1rem">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
+              <div>
+                <div style="font-size:1.15rem;font-weight:700;color:var(--text1)" id="nr-name"></div>
+                <div style="display:flex;gap:.5rem;margin-top:.4rem;flex-wrap:wrap" id="nr-macros"></div>
+              </div>
+              <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+                <button class="btn btn-sm" onclick="saveGeneratedRecipe()" style="color:var(--green);border-color:rgba(52,211,153,.3)">+ Save</button>
+                <button class="btn btn-sm" onclick="addRecipeToGrocery()" style="color:var(--cyan);border-color:rgba(6,182,212,.3)">🛒 Grocery</button>
+              </div>
+            </div>
+            <div style="margin-top:.85rem">
+              <div class="section-title" style="margin-bottom:.4rem">Ingredients</div>
+              <div id="nr-ingredients" style="font-size:.84rem;color:var(--text2);line-height:1.7"></div>
+            </div>
+            <div style="margin-top:.75rem">
+              <div class="section-title" style="margin-bottom:.4rem">Instructions</div>
+              <div id="nr-instructions" style="font-size:.84rem;color:var(--text2);line-height:1.7;white-space:pre-line"></div>
+            </div>
+            <div id="nr-why" style="margin-top:.75rem;font-size:.82rem;color:var(--cyan);font-style:italic;padding:.5rem .75rem;background:rgba(6,182,212,.06);border-radius:8px;border-left:2px solid var(--cyan)"></div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- DJ Remix -->
-    <div class="card" style="margin-top:1rem">
-      <div class="card-label"><span class="dot dot-violet"></span> 🎛 DJ Remix — Workout Music Generator</div>
-      <div style="display:flex;flex-wrap:wrap;gap:1rem;margin-top:.75rem">
-        <div style="flex:1;min-width:180px">
-          <div class="section-title">Sport</div>
-          <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.35rem" id="dj-sports">
-            <button class="btn btn-sm dj-active" data-dj="sport" data-val="RUN" onclick="djSelect('sport','RUN',this)">🏃 Run</button>
-            <button class="btn btn-sm" data-dj="sport" data-val="BIKE" onclick="djSelect('sport','BIKE',this)">🚴 Bike</button>
-            <button class="btn btn-sm" data-dj="sport" data-val="SWIM" onclick="djSelect('sport','SWIM',this)">🏊 Swim</button>
-            <button class="btn btn-sm" data-dj="sport" data-val="STRENGTH" onclick="djSelect('sport','STRENGTH',this)">🏋 Lift</button>
-            <button class="btn btn-sm" data-dj="sport" data-val="MOBILITY" onclick="djSelect('sport','MOBILITY',this)">🧘 Mobility</button>
-            <button class="btn btn-sm" data-dj="sport" data-val="RECOVERY" onclick="djSelect('sport','RECOVERY',this)">💤 Recovery</button>
-          </div>
-        </div>
-        <div style="flex:1;min-width:150px">
-          <div class="section-title">Intensity</div>
-          <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.35rem">
-            <button class="btn btn-sm" data-dj="intensity" data-val="easy" onclick="djSelect('intensity','easy',this)">Easy</button>
-            <button class="btn btn-sm dj-active" data-dj="intensity" data-val="moderate" onclick="djSelect('intensity','moderate',this)">Moderate</button>
-            <button class="btn btn-sm" data-dj="intensity" data-val="hard" onclick="djSelect('intensity','hard',this)">Hard</button>
-            <button class="btn btn-sm" data-dj="intensity" data-val="intervals" onclick="djSelect('intensity','intervals',this)">Intervals</button>
-            <button class="btn btn-sm" data-dj="intensity" data-val="recovery" onclick="djSelect('intensity','recovery',this)">Recovery</button>
-          </div>
-        </div>
-        <div>
-          <div class="section-title">Duration</div>
-          <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.35rem">
-            <button class="btn btn-sm" data-dj="duration" data-val="30" onclick="djSelect('duration','30',this)">30m</button>
-            <button class="btn btn-sm" data-dj="duration" data-val="45" onclick="djSelect('duration','45',this)">45m</button>
-            <button class="btn btn-sm dj-active" data-dj="duration" data-val="60" onclick="djSelect('duration','60',this)">60m</button>
-            <button class="btn btn-sm" data-dj="duration" data-val="75" onclick="djSelect('duration','75',this)">75m</button>
-            <button class="btn btn-sm" data-dj="duration" data-val="90" onclick="djSelect('duration','90',this)">90m</button>
-            <button class="btn btn-sm" data-dj="duration" data-val="120" onclick="djSelect('duration','120',this)">120m</button>
-          </div>
-        </div>
+    <!-- SAVED -->
+    <div id="nsec-saved" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
+        <div style="font-size:.82rem;color:var(--muted)" id="n-saved-count">Loading…</div>
       </div>
-      <button class="btn btn-accent" style="margin-top:.85rem" id="dj-btn" onclick="generateDJVibe()">🎵 Generate Vibe</button>
-      <div id="dj-result" style="margin-top:.85rem;display:none">
-        <div style="border-top:1px solid rgba(255,255,255,.08);padding-top:.85rem">
-          <div style="font-size:1.1rem;font-weight:700;color:var(--cyan)" id="dj-vibe-name"></div>
-          <div style="font-size:.82rem;color:var(--text2);margin-bottom:.6rem" id="dj-tagline"></div>
-          <div style="display:flex;gap:.75rem;margin-bottom:.6rem;flex-wrap:wrap">
-            <span style="font-size:.78rem;color:var(--text2)">BPM: <b id="dj-bpm" style="color:var(--text1)"></b></span>
-            <span style="font-size:.78rem;color:var(--text2)">Energy: <b id="dj-energy" style="color:var(--cyan)"></b>/10</span>
-          </div>
-          <div id="dj-genres" style="display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.75rem"></div>
-          <div class="section-title" style="margin-bottom:.4rem">Tracks</div>
-          <div id="dj-tracks" style="display:flex;flex-direction:column;gap:.3rem"></div>
-          <div id="dj-coach-note" style="margin-top:.65rem;font-size:.82rem;color:var(--text2);font-style:italic;padding:.5rem .75rem;background:rgba(255,255,255,.04);border-radius:6px;border-left:2px solid var(--cyan)"></div>
-          <a id="dj-spotify-link" href="#" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;gap:.4rem;margin-top:.75rem;padding:.6rem;background:rgba(29,185,84,.12);color:#1DB954;border-radius:8px;font-size:.85rem;font-weight:500;text-decoration:none;border:1px solid rgba(29,185,84,.2)">
-            <svg style="width:16px;height:16px" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
-            Search on Spotify ↗
-          </a>
+      <div id="n-saved-list" style="display:flex;flex-direction:column;gap:.6rem">
+        <div class="skel skel-text" style="margin-bottom:.4rem"></div>
+        <div class="skel skel-text sm"></div>
+      </div>
+    </div>
+
+    <!-- GROCERY -->
+    <div id="nsec-grocery" style="display:none">
+      <div class="card">
+        <div style="display:flex;gap:.5rem;margin-bottom:.85rem">
+          <input type="text" id="g-item-input" placeholder="Add item..." style="flex:1;background:var(--bg3);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:.45rem .75rem;color:var(--text1);font-size:.85rem" onkeydown="if(event.key==='Enter')groceryAdd()">
+          <input type="text" id="g-qty-input" placeholder="Qty" style="width:70px;background:var(--bg3);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:.45rem .6rem;color:var(--text1);font-size:.85rem;text-align:center">
+          <button class="btn btn-sm btn-accent" onclick="groceryAdd()">+ Add</button>
         </div>
+        <div id="g-list" style="display:flex;flex-direction:column;gap:.35rem"></div>
+        <button class="btn btn-sm" style="margin-top:.85rem;color:var(--muted);border-color:rgba(255,255,255,.1)" onclick="groceryClearChecked()">Clear checked</button>
       </div>
     </div>
   </div>
@@ -2359,6 +2834,48 @@ textarea { resize: vertical; min-height: 70px; }
 <div class="toast-container" id="toasts"></div>
 
 <!-- ═══════════════════════════════════════════════════════
+  QUICK LOG FAB
+═══════════════════════════════════════════════════════ -->
+<button id="quick-log-fab" title="Quick Log" onclick="toggleQuickLog()">＋</button>
+
+<div id="quick-log-modal" style="position:fixed">
+  <button id="quick-log-close" onclick="toggleQuickLog()">✕</button>
+  <div class="qlm-title">Quick Log</div>
+  <div class="qlm-btns">
+    <button class="qlm-btn" id="qlm-water8" onclick="qlmWater(8,this)">💧 +8oz</button>
+    <button class="qlm-btn" id="qlm-water16" onclick="qlmWater(16,this)">💧 +16oz</button>
+  </div>
+  <div class="qlm-btns">
+    <button class="qlm-btn" id="qlm-workout" onclick="qlmToggleWorkout(this)">🏋️ Workout Done</button>
+  </div>
+  <div>
+    <div style="font-size:.68rem;color:var(--muted);margin-bottom:.35rem;font-family:var(--mono)">MOOD</div>
+    <div class="qlm-mood-row">
+      <div class="qlm-mood-emojis" id="qlm-mood-emojis">
+        <span data-val="1" onclick="qlmSetMood(1,this)">😴</span>
+        <span data-val="2" onclick="qlmSetMood(2,this)">😐</span>
+        <span data-val="3" onclick="qlmSetMood(3,this)">😊</span>
+        <span data-val="4" onclick="qlmSetMood(4,this)">💪</span>
+        <span data-val="5" onclick="qlmSetMood(5,this)">🔥</span>
+      </div>
+      <span id="qlm-mood-val" style="font-family:var(--mono);font-size:.75rem;color:var(--cyan);margin-left:.4rem">—</span>
+    </div>
+  </div>
+  <button class="btn btn-accent" style="width:100%;margin-top:.25rem" onclick="qlmSubmit()">Log →</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+  MOBILE BOTTOM TAB BAR
+═══════════════════════════════════════════════════════ -->
+<div class="mobile-tabs" id="mobile-tabs">
+  <button onclick="switchPanel('home',this)"><span class="tab-icon">🏠</span><span>Home</span></button>
+  <button onclick="switchPanel('today',this)"><span class="tab-icon">📋</span><span>Today</span></button>
+  <button onclick="switchPanel('rocks',this)"><span class="tab-icon">🪨</span><span>Rocks</span></button>
+  <button onclick="switchPanel('agents',this)"><span class="tab-icon">🤖</span><span>Agents</span></button>
+  <button onclick="switchPanel('ironmind',this)"><span class="tab-icon">💪</span><span>IronMind</span></button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
   JAVASCRIPT
 ═══════════════════════════════════════════════════════ -->
 <script>
@@ -2411,8 +2928,8 @@ function switchPanel(id, btn) {
 
 function loadPanel(id) {
   if (id === 'ironmind')  loadIronMind();
-  if (id === 'lights')    loadLights();
-  if (id === 'music')     loadMusicStatus();
+  if (id === 'homehub')   { loadMusicStatus(); loadLights(); }
+  if (id === 'nutrition') { /* tabs load on demand */ }
   if (id === 'intel')     loadIntel();
   if (id === 'analytics') { loadAnalytics(); loadStockAlerts(); loadHistory(); }
   if (id === 'agents')    loadAgents();
@@ -2515,9 +3032,121 @@ function updateRocksProgress(data) {
   const pct   = total ? done / total : 0;
   const txt   = document.getElementById('rocks-progress-txt');
   if (txt) txt.textContent = `${done}/${total}`;
-  // SVG ring: circumference = 2π×18 ≈ 113
   const circle = document.getElementById('rocks-ring-circle');
   if (circle) circle.style.strokeDashoffset = 113 - (pct * 113);
+  // Fire celebration if all complete (and we have rocks)
+  if (total > 0 && done === total) fireYouRock();
+}
+
+/* ── YOU ROCK Celebration ── */
+let _youRockFired = false;
+let _youRockRAF   = null;
+
+function fireYouRock(force = false) {
+  // Only fire once per day unless forced
+  const key = `you_rock_${new Date().toISOString().slice(0,10)}`;
+  if (!force && (localStorage.getItem(key) || _youRockFired)) return;
+  _youRockFired = true;
+  localStorage.setItem(key, '1');
+
+  const overlay = document.getElementById('you-rock-overlay');
+  const circle  = overlay.querySelector('circle');
+  const tick    = overlay.querySelector('polyline');
+  const txt     = document.getElementById('you-rock-text');
+  const sub     = document.getElementById('you-rock-sub');
+
+  overlay.style.display = 'flex';
+  // Animate checkmark
+  requestAnimationFrame(() => {
+    circle.style.strokeDashoffset = '0';
+    tick.style.strokeDashoffset   = '0';
+    txt.style.opacity    = '1';
+    txt.style.transform  = 'scale(1)';
+    sub.style.opacity    = '1';
+  });
+
+  // Play chime via Web Audio
+  try {
+    const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+    [[523,.0],[659,.15],[784,.3],[1047,.5]].forEach(([freq,when]) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = freq; o.type = 'sine';
+      g.gain.setValueAtTime(0.18, ctx.currentTime + when);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + when + 0.5);
+      o.start(ctx.currentTime + when);
+      o.stop(ctx.currentTime + when + 0.6);
+    });
+  } catch(e) {}
+
+  // Confetti burst
+  _youRockConfetti();
+}
+
+function _youRockConfetti() {
+  const canvas = document.getElementById('you-rock-confetti');
+  const W = canvas.width  = window.innerWidth;
+  const H = canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const COLORS = ['#00ff88','#00d4ff','#7c3aed','#ffd60a','#ff4d6d','#f472b6','#ff8c42'];
+  const particles = Array.from({length: 180}, () => ({
+    x: W / 2, y: H / 2,
+    vx: (Math.random() - .5) * 22,
+    vy: (Math.random() - .8) * 18,
+    color: COLORS[Math.random() * COLORS.length | 0],
+    size: Math.random() * 8 + 4,
+    rot: Math.random() * 360,
+    rotV: (Math.random() - .5) * 8,
+    shape: Math.random() > .5 ? 'rect' : 'circle',
+    alpha: 1
+  }));
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    let alive = false;
+    particles.forEach(p => {
+      p.x  += p.vx; p.y  += p.vy;
+      p.vy += .45;  p.vx *= .98;
+      p.rot += p.rotV;
+      p.alpha -= .013;
+      if (p.alpha <= 0) return;
+      alive = true;
+      ctx.save();
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle   = p.color;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI / 180);
+      if (p.shape === 'rect') ctx.fillRect(-p.size/2, -p.size/4, p.size, p.size/2);
+      else { ctx.beginPath(); ctx.arc(0,0,p.size/2,0,Math.PI*2); ctx.fill(); }
+      ctx.restore();
+    });
+    if (alive) _youRockRAF = requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,W,H);
+  }
+  _youRockRAF = requestAnimationFrame(draw);
+}
+
+function dismissYouRock() {
+  const overlay = document.getElementById('you-rock-overlay');
+  overlay.style.transition = 'opacity .4s';
+  overlay.style.opacity = '0';
+  if (_youRockRAF) cancelAnimationFrame(_youRockRAF);
+  setTimeout(() => {
+    overlay.style.display   = 'none';
+    overlay.style.opacity   = '1';
+    overlay.style.transition = '';
+    // Reset SVG for next time
+    const circle = overlay.querySelector('circle');
+    const tick   = overlay.querySelector('polyline');
+    const txt    = document.getElementById('you-rock-text');
+    const sub    = document.getElementById('you-rock-sub');
+    circle.style.strokeDashoffset = '339';
+    tick.style.strokeDashoffset   = '80';
+    txt.style.opacity = '0'; txt.style.transform = 'scale(.7)';
+    sub.style.opacity = '0';
+    _youRockFired = false;
+  }, 400);
 }
 
 async function toggleRock(id, currentStatus, el) {
@@ -2867,16 +3496,18 @@ function buildWaveform(id, count=20) {
 }
 buildWaveform('h-waveform'); buildWaveform('m-waveform');
 
+let _lastSongInfoKey = '';
+
 function updateMusicUI(m) {
   if (!m) return;
   isPlaying = m.playing;
-  const title = m.track||'Nothing playing';
-  const artist = m.artist||'';
+  const title  = m.track  || 'Nothing playing';
+  const artist = m.artist || '';
   ['h','m'].forEach(p => {
-    const t = document.getElementById(p+'-track');
-    const a = document.getElementById(p+'-artist');
+    const t   = document.getElementById(p+'-track');
+    const a   = document.getElementById(p+'-artist');
     const btn = document.getElementById(p+'-play-btn');
-    const wf = document.getElementById(p+'-waveform');
+    const wf  = document.getElementById(p+'-waveform');
     if (t) t.textContent = title;
     if (a) a.textContent = artist;
     if (btn) btn.textContent = m.playing ? '⏸' : '▶';
@@ -2887,6 +3518,56 @@ function updateMusicUI(m) {
     const vv = document.getElementById('m-vol-val');
     if (vv) vv.textContent = m.volume;
   }
+  // Fetch song info when track changes
+  const key = `${artist}::${title}`;
+  if (key !== _lastSongInfoKey && title !== 'Nothing playing' && artist) {
+    _lastSongInfoKey = key;
+    loadSongInfo();
+  }
+}
+
+async function loadSongInfo() {
+  const body    = document.getElementById('song-info-body');
+  const spinner = document.getElementById('song-info-spinner');
+  if (!body) return;
+  if (spinner) spinner.textContent = 'loading…';
+  body.style.opacity = '0.4';
+  try {
+    const d = await api('/music/info');
+    if (!d.track) { body.innerHTML = '<span style="color:var(--muted);font-size:.8rem">Nothing playing</span>'; return; }
+    const cached = d.cached ? '' : '<span style="font-size:.65rem;color:var(--muted);margin-left:.4rem">✨ generated</span>';
+    body.innerHTML = `
+      <div style="margin-bottom:.75rem">
+        <div style="font-size:1.05rem;font-weight:700;color:var(--text)">${d.track}</div>
+        <div style="font-size:.82rem;color:var(--cyan);margin-top:.1rem;cursor:pointer" id="song-artist-btn">${d.artist}${cached}</div>
+        <div style="font-size:.75rem;color:var(--text2);margin-top:.2rem">${[d.album, d.year, d.genre].filter(Boolean).join(' · ')}</div>
+      </div>
+      <div id="song-story-wrap">
+        <div style="font-size:.8rem;color:var(--text2);line-height:1.6;cursor:pointer" id="song-story-short" onclick="expandSongStory()">${d.story || ''} <span style="color:var(--cyan);font-size:.72rem">more ›</span></div>
+        <div style="display:none;font-size:.8rem;color:var(--text2);line-height:1.6" id="song-story-full">
+          <div style="margin-bottom:.5rem">${d.story || ''}</div>
+          <div style="color:var(--yellow)">💡 ${d.fun_fact || ''}</div>
+          <div style="margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--glass-border);font-style:italic">${d.artist_bio || ''}</div>
+          <div style="margin-top:.5rem;font-size:.72rem;color:var(--cyan);cursor:pointer" onclick="collapseSongStory()">‹ less</div>
+        </div>
+      </div>`;
+    body.style.transition = 'opacity .3s';
+    body.style.opacity = '1';
+    if (spinner) spinner.textContent = '';
+  } catch(e) {
+    body.innerHTML = '<span style="color:var(--muted);font-size:.8rem">Song info unavailable</span>';
+    body.style.opacity = '1';
+    if (spinner) spinner.textContent = '';
+  }
+}
+
+function expandSongStory() {
+  document.getElementById('song-story-short').style.display = 'none';
+  document.getElementById('song-story-full').style.display  = 'block';
+}
+function collapseSongStory() {
+  document.getElementById('song-story-short').style.display = 'block';
+  document.getElementById('song-story-full').style.display  = 'none';
 }
 
 async function syncMusicState() {
@@ -3181,6 +3862,7 @@ async function loadIronMind() {
     loadIdentity();
     loadReview();
     loadIronmanProtocol();
+    initReflectionState();
   } catch(e) { console.error(e); }
 }
 
@@ -3339,6 +4021,231 @@ function djSelect(key, val, btn) {
   btn.classList.add('dj-active');
 }
 
+/* ── Vibe Check ── */
+let _currentVibe = 'focus';
+
+function vibeSelect(btn) {
+  document.querySelectorAll('.vibe-btn').forEach(b => b.classList.remove('vibe-active'));
+  btn.classList.add('vibe-active');
+  _currentVibe = btn.dataset.vibe;
+  loadVibeQueue(_currentVibe);
+}
+
+/* ══════════════════════════════════════════════════════════
+   NUTRITION
+══════════════════════════════════════════════════════════ */
+const _nState = { goal: 'endurance fuel', cook_time: 'quick (under 15 min)' };
+let _lastGenerated = null;
+
+function nTab(tab) {
+  ['gen','saved','grocery'].forEach(t => {
+    document.getElementById('nsec-'+t).style.display = t === tab ? '' : 'none';
+    document.getElementById('ntab-'+t).classList.toggle('ntab-active', t === tab);
+  });
+  if (tab === 'saved')   loadSavedRecipes();
+  if (tab === 'grocery') loadGroceryList();
+}
+
+function nOpt(key, btn) {
+  document.querySelectorAll(`[data-ng="${key}"]`).forEach(b => b.classList.remove('nopt-active'));
+  btn.classList.add('nopt-active');
+  _nState[key] = btn.dataset.val;
+}
+
+async function generateRecipe() {
+  const btn = document.getElementById('n-gen-btn');
+  btn.textContent = '✨ Generating…';
+  btn.disabled = true;
+  document.getElementById('n-result').style.display = 'none';
+  try {
+    const d = await api('/nutrition/recipe/generate', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        goal: _nState.goal,
+        cook_time: _nState.cook_time,
+        ingredients: document.getElementById('n-ingredients').value,
+        calories: parseInt(document.getElementById('n-calories').value) || 600
+      })
+    });
+    _lastGenerated = d;
+    // Photo
+    const photoEl = document.getElementById('nr-photo');
+    const skelEl  = document.getElementById('nr-photo-skel');
+    const wrapEl  = document.getElementById('nr-photo-wrap');
+    wrapEl.style.display = '';
+    skelEl.style.display = '';
+    photoEl.style.opacity = '0';
+    const query = encodeURIComponent((d.name || 'healthy food') + ' meal food');
+    photoEl.src = `https://source.unsplash.com/800x440/?${query}`;
+    // Content
+    document.getElementById('nr-name').textContent = d.name || 'Recipe';
+    document.getElementById('nr-macros').innerHTML = [
+      ['cal',  d.calories,  '#f59e0b'],
+      ['pro',  d.protein_g + 'g', 'var(--green)'],
+      ['carbs',d.carbs_g + 'g',   'var(--cyan)'],
+      ['fats', d.fats_g + 'g',    'var(--violet)'],
+    ].map(([l,v,c]) => `<span class="macro-pill" style="background:rgba(255,255,255,.05);color:${c}">${l} <b>${v}</b></span>`).join('');
+    document.getElementById('nr-ingredients').innerHTML = (d.ingredients||[]).map(i => `• ${i}`).join('<br>');
+    document.getElementById('nr-instructions').textContent = d.instructions || '';
+    document.getElementById('nr-why').textContent = d.why ? '⚡ ' + d.why : '';
+    document.getElementById('nr-why').style.display = d.why ? '' : 'none';
+    document.getElementById('n-result').style.display = '';
+  } catch(e) {
+    toast('Recipe failed: ' + e.message, 'error');
+  } finally {
+    btn.textContent = '✨ Generate Recipe';
+    btn.disabled = false;
+  }
+}
+
+async function saveGeneratedRecipe() {
+  if (!_lastGenerated) return;
+  try {
+    await api('/nutrition/recipes', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(_lastGenerated) });
+    toast('Recipe saved ✓', 'success');
+  } catch(e) { toast('Save failed', 'error'); }
+}
+
+async function addRecipeToGrocery() {
+  if (!_lastGenerated) return;
+  const items = _lastGenerated.ingredients || [];
+  for (const item of items) {
+    await api('/nutrition/grocery', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({item}) });
+  }
+  toast(`${items.length} items added to grocery list ✓`, 'success');
+}
+
+async function loadSavedRecipes() {
+  const list = document.getElementById('n-saved-list');
+  const count = document.getElementById('n-saved-count');
+  list.innerHTML = '<div class="skel skel-text" style="margin-bottom:.4rem"></div><div class="skel skel-text sm"></div>';
+  try {
+    const recipes = await api('/nutrition/recipes');
+    count.textContent = `${recipes.length} saved recipe${recipes.length !== 1 ? 's' : ''}`;
+    if (!recipes.length) { list.innerHTML = '<div style="color:var(--muted);font-size:.85rem;text-align:center;padding:1.5rem 0">No saved recipes yet. Generate one!</div>'; return; }
+    list.innerHTML = recipes.map(r => `
+      <div class="recipe-card" id="rc-${r.id}">
+        <div class="recipe-card-header">
+          <div>
+            <div class="recipe-card-name">${r.name} ${r.favorited ? '⭐' : ''}</div>
+            <div class="recipe-card-macros">${r.calories} cal · ${r.protein_g}g protein · ${r.carbs_g}g carbs · ${r.fats_g}g fats</div>
+            <div style="margin-top:.3rem;display:flex;gap:.3rem;flex-wrap:wrap">${(r.tags||[]).map(t=>`<span style="font-size:.65rem;background:rgba(255,255,255,.06);padding:.1rem .4rem;border-radius:4px;color:var(--text3)">${t}</span>`).join('')}</div>
+          </div>
+          <div style="display:flex;gap:.35rem;flex-shrink:0">
+            <button class="btn btn-sm" onclick="recipeAddToGrocery(${r.id},event)" style="font-size:.7rem;padding:.2rem .45rem;color:var(--cyan)">🛒</button>
+            <button class="btn btn-sm" onclick="recipeFav(${r.id},${r.favorited?0:1},event)" style="font-size:.7rem;padding:.2rem .45rem">${r.favorited ? '★' : '☆'}</button>
+            <button class="btn btn-sm" onclick="recipeRemove(${r.id},event)" style="font-size:.7rem;padding:.2rem .45rem;color:var(--red)">✕</button>
+          </div>
+        </div>
+        <div class="recipe-expand" id="rexp-${r.id}" style="display:none">
+          <div style="margin-bottom:.4rem"><b style="color:var(--text2)">Ingredients</b><br>${(r.ingredients||[]).map(i=>`• ${i}`).join('<br>')}</div>
+          <div><b style="color:var(--text2)">Instructions</b><br><span style="white-space:pre-line">${r.instructions||''}</span></div>
+          ${r.why ? `<div style="margin-top:.5rem;color:var(--cyan);font-style:italic">⚡ ${r.why}</div>` : ''}
+        </div>
+        <button class="btn btn-sm" style="margin-top:.5rem;font-size:.72rem;color:var(--muted);border-color:transparent" onclick="toggleRecipeExpand(${r.id},this)">▶ Show details</button>
+      </div>`).join('');
+  } catch(e) {
+    list.innerHTML = '<div style="color:var(--red);font-size:.85rem">Failed to load.</div>';
+  }
+}
+
+function toggleRecipeExpand(id, btn) {
+  const exp = document.getElementById('rexp-'+id);
+  const open = exp.style.display === '';
+  exp.style.display = open ? 'none' : '';
+  btn.textContent = open ? '▶ Show details' : '▲ Hide';
+}
+
+async function recipeFav(id, state, e) {
+  e.stopPropagation();
+  await api(`/nutrition/recipes/${id}/favorite?state=${state}`, {method:'POST'});
+  loadSavedRecipes();
+}
+
+async function recipeRemove(id, e) {
+  e.stopPropagation();
+  await api(`/nutrition/recipes/${id}`, {method:'DELETE'});
+  loadSavedRecipes();
+}
+
+async function recipeAddToGrocery(id, e) {
+  e.stopPropagation();
+  const d = await api(`/nutrition/recipes/${id}/grocery`, {method:'POST'});
+  toast(`${d.added} items added to grocery ✓`, 'success');
+}
+
+async function loadGroceryList() {
+  const list = document.getElementById('g-list');
+  list.innerHTML = '<div class="skel skel-text" style="margin-bottom:.4rem"></div>';
+  try {
+    const items = await api('/nutrition/grocery');
+    renderGrocery(items);
+  } catch(e) { list.innerHTML = '<div style="color:var(--red);font-size:.85rem">Failed to load.</div>'; }
+}
+
+function renderGrocery(items) {
+  const list = document.getElementById('g-list');
+  if (!items.length) { list.innerHTML = '<div style="color:var(--muted);font-size:.85rem;text-align:center;padding:1rem 0">List is empty. Add items above.</div>'; return; }
+  list.innerHTML = items.map(it => `
+    <div class="g-item-row" id="gi-${it.id}">
+      <input type="checkbox" class="g-item-check" ${it.checked ? 'checked' : ''} onchange="groceryToggle(${it.id},this.checked)">
+      <span class="g-item-label ${it.checked ? 'done' : ''}">${it.item}</span>
+      <span class="g-item-qty">${it.quantity||''}</span>
+      <button class="g-del-btn" onclick="groceryRemove(${it.id})">✕</button>
+    </div>`).join('');
+}
+
+async function groceryAdd() {
+  const inp = document.getElementById('g-item-input');
+  const qty = document.getElementById('g-qty-input');
+  const item = inp.value.trim();
+  if (!item) return;
+  await api('/nutrition/grocery', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({item, quantity: qty.value.trim()})});
+  inp.value = ''; qty.value = '';
+  loadGroceryList();
+}
+
+async function groceryToggle(id, checked) {
+  await api(`/nutrition/grocery/${id}?checked=${checked?1:0}`, {method:'PATCH'});
+  loadGroceryList();
+}
+
+async function groceryRemove(id) {
+  await api(`/nutrition/grocery/${id}`, {method:'DELETE'});
+  loadGroceryList();
+}
+
+async function groceryClearChecked() {
+  await api('/nutrition/grocery', {method:'DELETE'});
+  loadGroceryList();
+}
+
+async function loadVibeQueue(mood) {
+  const spinner = document.getElementById('vibe-spinner');
+  const container = document.getElementById('vibe-tracks');
+  spinner.textContent = 'loading…';
+  container.innerHTML = `<div class="skel skel-text" style="margin-bottom:.4rem"></div><div class="skel skel-text" style="margin-bottom:.4rem"></div><div class="skel skel-text sm"></div>`;
+  try {
+    const d = await api('/music/mood-queue?mood=' + encodeURIComponent(mood));
+    spinner.textContent = '';
+    if (!d.tracks || !d.tracks.length) { container.innerHTML = '<div style="color:var(--muted);font-size:.82rem">No tracks found.</div>'; return; }
+    container.innerHTML = d.tracks.map((t, i) => `
+      <div class="vibe-track" onclick="window.open('https://music.apple.com/search?term='+encodeURIComponent('${(t.title||'').replace(/'/g,"\\'")} ${(t.artist||'').replace(/'/g,"\\'")}'),'_blank')">
+        <div class="vibe-track-num">${i+1}</div>
+        <div class="vibe-track-info">
+          <div class="vibe-track-title">${t.title}</div>
+          <div class="vibe-track-artist">${t.artist}</div>
+          <div class="vibe-track-reason">${t.reason}</div>
+        </div>
+        <div style="font-size:.7rem;color:var(--muted);padding-top:.1rem">↗</div>
+      </div>`).join('');
+  } catch(e) {
+    spinner.textContent = '';
+    container.innerHTML = '<div style="color:var(--red);font-size:.82rem">Offline</div>';
+  }
+}
+
 async function generateDJVibe() {
   const btn = document.getElementById('dj-btn');
   btn.textContent = '🎛 Dropping the vibe…';
@@ -3379,7 +4286,8 @@ async function generateDJVibe() {
 
     if (d.coachNote) document.getElementById('dj-coach-note').textContent = '⚡ ' + d.coachNote;
     const link = document.getElementById('dj-spotify-link');
-    link.href = d.spotifyUrl || '#';
+    const searchQ = encodeURIComponent((d.vibeName || '') + ' ' + (d.genres?.[0] || ''));
+    link.href = `https://music.apple.com/search?term=${searchQ}`;
 
     document.getElementById('dj-result').style.display = 'block';
   } catch(e) {
@@ -3571,13 +4479,106 @@ async function loadIronmanProtocol() {
   }
 }
 
+function _reflectionStorageKey() {
+  return `reflection_done_${new Date().toISOString().slice(0,10)}`;
+}
+
+function initReflectionState() {
+  if (localStorage.getItem(_reflectionStorageKey())) {
+    _showReflectionDone(false); // show done state, no animation
+  }
+}
+
+function _showReflectionDone(animate = true) {
+  const form = document.getElementById('reflection-form');
+  const done = document.getElementById('reflection-done');
+  if (!form || !done) return;
+  form.style.display = 'none';
+  done.style.display = 'flex';
+  if (animate) {
+    // Animate circle
+    setTimeout(() => {
+      const circle = document.getElementById('reflection-check-circle');
+      if (circle) circle.style.strokeDashoffset = '0';
+    }, 80);
+    // Animate tick
+    setTimeout(() => {
+      const tick = document.getElementById('reflection-check-tick');
+      if (tick) tick.style.strokeDashoffset = '0';
+    }, 200);
+    // Confetti
+    setTimeout(() => fireConfetti(), 400);
+  } else {
+    const circle = document.getElementById('reflection-check-circle');
+    const tick   = document.getElementById('reflection-check-tick');
+    if (circle) { circle.style.transition = 'none'; circle.style.strokeDashoffset = '0'; }
+    if (tick)   { tick.style.transition   = 'none'; tick.style.strokeDashoffset   = '0'; }
+  }
+}
+
+function fireConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const COLORS = ['#00d4ff','#00ff88','#7c3aed','#ffd60a','#ff8c42','#f472b6','#ffffff'];
+  const pieces = Array.from({length: 140}, () => ({
+    x: canvas.width / 2,
+    y: canvas.height / 2,
+    vx: (Math.random() - 0.5) * 18,
+    vy: (Math.random() - 1.2) * 16,
+    r: Math.random() * 7 + 3,
+    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+    rot: Math.random() * Math.PI * 2,
+    rotV: (Math.random() - 0.5) * 0.2,
+    shape: Math.random() > 0.5 ? 'rect' : 'circle',
+    w: Math.random() * 10 + 4,
+    h: Math.random() * 5 + 3,
+    alpha: 1,
+  }));
+  let frame;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    pieces.forEach(p => {
+      p.vy += 0.45;
+      p.vx *= 0.99;
+      p.x  += p.vx;
+      p.y  += p.vy;
+      p.rot += p.rotV;
+      p.alpha -= 0.013;
+      if (p.alpha > 0) {
+        alive = true;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.alpha);
+        ctx.fillStyle = p.color;
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        if (p.shape === 'rect') {
+          ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+        } else {
+          ctx.beginPath();
+          ctx.arc(0, 0, p.r/2, 0, Math.PI*2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+    });
+    if (alive) frame = requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  if (frame) cancelAnimationFrame(frame);
+  draw();
+}
+
 async function saveJournal() {
   const right   = document.getElementById('j-right').value.trim();
   const corners = document.getElementById('j-corners').value.trim();
   const tmrw    = document.getElementById('j-tomorrow').value.trim();
-  if (!right && !corners && !tmrw) { toast('Nothing to save — write something first.','error'); return; }
+  if (!right && !corners && !tmrw) { toast('Write something first.', 'error'); return; }
 
-  const btn = document.querySelector('[onclick="saveJournal()"]');
+  const btn = document.getElementById('reflection-save-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
 
   try {
@@ -3586,25 +4587,8 @@ async function saveJournal() {
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ went_right: right, cut_corners: corners, tomorrow_std: tmrw })
     });
-
-    // Clear fields
-    ['j-right','j-corners','j-tomorrow'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = '';
-    });
-
-    // Checkmark confirmation
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = '✓ Reflection Saved';
-      btn.style.background = 'var(--green)';
-      btn.style.color = '#000';
-      setTimeout(() => {
-        btn.textContent = 'Save Reflection';
-        btn.style.background = '';
-        btn.style.color = '';
-      }, 3000);
-    }
+    localStorage.setItem(_reflectionStorageKey(), '1');
+    _showReflectionDone(true);
     toast('Reflection saved ✓', 'success');
   } catch(e) {
     if (btn) { btn.disabled = false; btn.textContent = 'Save Reflection'; }
@@ -3650,6 +4634,38 @@ async function loadReview() {
 function loadIntel() {
   loadWeather(); loadBriefing(); loadAffirmation();
 }
+function _wxIcon(text) {
+  const t = text.toLowerCase();
+  if (/thunder|storm|lightning/.test(t))   return _wxStorm();
+  if (/snow|blizzard|flurr/.test(t))        return _wxSnow();
+  if (/rain|drizzle|shower|sleet/.test(t))  return _wxRain();
+  if (/partly|mostly cloud|few cloud/.test(t)) return _wxPartlyCloudy();
+  if (/cloud|overcast|fog|mist/.test(t))    return _wxCloudy();
+  return _wxSun();
+}
+function _wxSun() {
+  const rays = Array.from({length:8},(_,i)=>`<div class="wx-sun-ray" style="transform:rotate(${i*45}deg)"></div>`).join('');
+  return `<div class="wx-icon">${rays}<div class="wx-sun-core"></div></div>`;
+}
+function _wxPartlyCloudy() {
+  return `<div class="wx-icon"><div class="wx-pc-sun"></div><div class="wx-cloud wx-cloud-main"></div><div class="wx-cloud wx-cloud-puff"></div><div class="wx-cloud wx-cloud-puff2"></div></div>`;
+}
+function _wxCloudy() {
+  return `<div class="wx-icon"><div class="wx-cloud wx-cloud-main" style="left:4px;bottom:14px"></div><div class="wx-cloud wx-cloud-puff"></div><div class="wx-cloud wx-cloud-puff2"></div><div class="wx-cloud" style="bottom:28px;left:8px;width:36px;height:18px;opacity:.6;animation-delay:.8s"></div></div>`;
+}
+function _wxRain() {
+  const drops = Array.from({length:6},(_,i)=>`<div class="wx-drop" style="left:${8+i*9}px;height:${10+Math.random()*6|0}px;animation-duration:${.7+i*.12}s;animation-delay:${i*.1}s;bottom:2px"></div>`).join('');
+  return `<div class="wx-icon"><div class="wx-cloud wx-cloud-main" style="bottom:24px"></div><div class="wx-cloud wx-cloud-puff" style="bottom:34px"></div>${drops}</div>`;
+}
+function _wxStorm() {
+  const drops = Array.from({length:4},(_,i)=>`<div class="wx-drop" style="left:${6+i*12}px;height:8px;animation-duration:${.65+i*.1}s;animation-delay:${i*.15}s;bottom:2px;opacity:.7"></div>`).join('');
+  return `<div class="wx-icon"><div class="wx-cloud wx-cloud-main" style="bottom:28px;background:rgba(100,100,130,.9)"></div><div class="wx-cloud wx-cloud-puff" style="bottom:38px;background:rgba(100,100,130,.9)"></div><div class="wx-bolt"></div>${drops}</div>`;
+}
+function _wxSnow() {
+  const flakes = Array.from({length:7},(_,i)=>`<div class="wx-flake" style="left:${6+i*8}px;width:4px;height:4px;animation-duration:${1.2+i*.15}s;animation-delay:${i*.12}s;bottom:0"></div>`).join('');
+  return `<div class="wx-icon"><div class="wx-cloud wx-cloud-main" style="bottom:24px"></div><div class="wx-cloud wx-cloud-puff" style="bottom:34px"></div>${flakes}</div>`;
+}
+
 async function loadWeather() {
   const el = document.getElementById('intel-weather');
   ['h-temp','h-desc','h-meta'].forEach(id => {
@@ -3659,17 +4675,28 @@ async function loadWeather() {
   try {
     const d = await api('/weather');
     const text = d.result || '';
-    if (el) el.innerHTML = `<div style="font-family:var(--mono);font-size:2.2rem;font-weight:700;color:var(--cyan)">${text.split(',')[0].replace('🌤 ','').trim()}</div><div style="color:var(--text2);font-size:.85rem;margin-top:.3rem">${text.split(',').slice(1).join(',').trim()}</div>`;
-    // Update home widget
-    const parts = text.split(',');
-    const tempMatch = text.match(/(\d+)°F/);
-    if (tempMatch) {
-      const ht = document.getElementById('h-temp');
-      if(ht) ht.textContent = tempMatch[0];
-    }
-    const desc = text.split('🌤 ')[1]?.split(',')[0];
+    const tempMatch = text.match(/(-?\d+)°F/);
+    const temp = tempMatch ? tempMatch[0] : '';
+    const descRaw = text.replace(/🌤\s*/,'').replace(temp,'').replace(/^[,\s]+/,'').trim();
+
+    // Intel card
+    if (el) el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:1rem">
+        ${_wxIcon(text)}
+        <div>
+          <div style="font-family:var(--mono);font-size:2.2rem;font-weight:700;color:var(--cyan)">${temp}</div>
+          <div style="color:var(--text2);font-size:.85rem;margin-top:.1rem">${descRaw.split(',')[0]}</div>
+          <div style="color:var(--muted);font-size:.75rem;margin-top:.2rem">${descRaw.split(',').slice(1).join(',').trim()}</div>
+        </div>
+      </div>`;
+
+    // Home card
+    const iconEl = document.getElementById('h-wx-icon');
+    if (iconEl) iconEl.innerHTML = _wxIcon(text);
+    const ht = document.getElementById('h-temp');
+    if (ht) ht.textContent = temp;
     const hd = document.getElementById('h-desc');
-    if(hd && desc) hd.textContent = desc;
+    if (hd) hd.textContent = descRaw.split(',')[0];
   } catch(e) {
     if(el) el.innerHTML = `<div style="color:var(--muted)">${e.message}</div>`;
   }
@@ -3711,22 +4738,115 @@ function loadAffirmation() {
 }
 
 /* ── Home Hero ── */
-function loadHomeHero() {
-  // Greeting
-  const hr = new Date().getHours();
-  const greeting = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
-  const greetEl = document.getElementById('home-greeting');
-  if (greetEl) greetEl.textContent = `${greeting}, Jordan`;
+/* ── Hydration ── */
+async function loadHydration() {
+  try {
+    const d = await api('/hydration/today');
+    const pct = Math.min(100, d.pct || 0);
+    const bar = document.getElementById('hydration-bar');
+    const txt = document.getElementById('hydration-oz-txt');
+    if (bar) bar.style.width = pct + '%';
+    if (txt) txt.textContent = `${d.oz || 0} / ${d.goal || 100} oz  (${pct}%)`;
+  } catch(e) {}
+}
+async function logHydration(oz) {
+  await fetch('/hydration/log', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({oz})});
+  loadHydration();
+}
 
-  // Subline — date + race countdown
+/* ── Calendar ── */
+async function loadCalendar() {
+  const el = document.getElementById('cal-events');
+  if (!el) return;
+  try {
+    const d = await api('/calendar/today');
+    const evts = d.events || [];
+    if (!evts.length) {
+      el.innerHTML = '<span style="color:var(--muted)">No events today</span>';
+      return;
+    }
+    el.innerHTML = evts.map(e => {
+      const t = e.start ? e.start.split(' ').slice(1,2).join(' ') : '';
+      return `<div style="display:flex;gap:.5rem;align-items:baseline">
+        <span style="color:var(--cyan);font-size:.7rem;white-space:nowrap">${t}</span>
+        <span style="color:var(--text)">${e.title}</span>
+      </div>`;
+    }).join('');
+  } catch(e) { if(el) el.innerHTML = '<span style="color:var(--muted)">Calendar unavailable</span>'; }
+}
+
+/* ── Stocks ── */
+async function loadStocks() {
+  const grid = document.getElementById('stocks-grid');
+  if (!grid) return;
+  try {
+    const d = await api('/stocks/watchlist');
+    const stocks = d.stocks || [];
+    grid.innerHTML = stocks.map(s => {
+      const up    = s.pct >= 0;
+      const color = s.pct > 1 ? 'var(--green)' : s.pct < -1 ? 'var(--red)' : 'var(--text2)';
+      const score = s.buy_score || 0;
+      const scoreColor = score >= 7 ? 'var(--green)' : score >= 5 ? 'var(--yellow)' : 'var(--red)';
+      return `<div style="background:var(--bg4);border-radius:10px;padding:.6rem .75rem;cursor:pointer" title="${s.trend}">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-family:var(--mono);font-weight:700;font-size:.85rem">${s.ticker}</span>
+          <span style="font-size:.7rem;color:${scoreColor};font-weight:600">${score}/10</span>
+        </div>
+        <div style="font-size:.95rem;font-weight:600;margin:.15rem 0">$${s.price}</div>
+        <div style="font-size:.72rem;color:${color}">${up?'▲':'▼'} ${Math.abs(s.pct)}%  ${s.trend}</div>
+      </div>`;
+    }).join('');
+  } catch(e) { if(grid) grid.innerHTML = '<span style="color:var(--muted);font-size:.8rem">Market data unavailable</span>'; }
+}
+
+async function loadTodaysProtocol() {
+  const body = document.getElementById('protocol-body');
+  const timeEl = document.getElementById('protocol-time');
+  if (!body) return;
+  try {
+    const data = await api('/ironmind/protocol');
+    if (data && data.briefing_text) {
+      body.textContent = data.briefing_text;
+      if (timeEl && data.created_at) {
+        timeEl.textContent = 'Generated ' + new Date(data.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      }
+    } else {
+      body.innerHTML = '<span style="color:var(--muted)">No protocol yet today — fires at 7 AM.</span>';
+    }
+  } catch(e) {
+    body.innerHTML = '<span style="color:var(--muted)">Protocol unavailable.</span>';
+  }
+}
+
+function _getGreeting(hr) {
+  if (hr >= 5  && hr < 12) return 'Good morning';
+  if (hr >= 12 && hr < 17) return 'Good afternoon';
+  if (hr >= 17 && hr < 21) return 'Good evening';
+  return 'Good night';
+}
+
+function _updateHeroGreetingLine() {
+  const now  = new Date();
+  const hr   = now.getHours();
+  const greetEl = document.getElementById('home-greeting');
+  if (greetEl) greetEl.textContent = `${_getGreeting(hr)}, Jordan`;
+
   const RACE = new Date('2026-11-07');
   const today = new Date(); today.setHours(0,0,0,0);
   const daysLeft = Math.ceil((RACE - today) / 86400000);
-  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const dayNames   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const sub = `${dayNames[today.getDay()]}, ${monthNames[today.getMonth()]} ${today.getDate()} · ${daysLeft} days to Ironman Florida`;
   const subEl = document.getElementById('home-subline');
   if (subEl) subEl.textContent = sub;
+  return daysLeft;
+}
+
+function loadHomeHero() {
+  const daysLeft = _updateHeroGreetingLine();
+
+  // Refresh greeting every minute so it stays current across midnight
+  setInterval(_updateHeroGreetingLine, 60000);
 
   // Race stat chip
   const daysEl = document.getElementById('hero-days-val');
@@ -4161,21 +5281,58 @@ async function runAdler() {
   }
 }
 
-/* ── Day / Night Mode ── */
-(function initTheme() {
-  const saved = localStorage.getItem('theme') || 'night';
-  if (saved === 'day') {
-    document.documentElement.classList.add('day');
-    document.getElementById('theme-toggle').textContent = '☀️';
+/* ── Day / Night Mode — auto-switches at 7 AM and 7 PM ── */
+let _themeManual = false; // true if user manually toggled, overrides auto
+
+function _applyTheme(isDay) {
+  const root = document.documentElement;
+  const btn  = document.getElementById('theme-toggle');
+  if (isDay) {
+    root.classList.add('day');
+    if (btn) btn.textContent = '☀️';
+  } else {
+    root.classList.remove('day');
+    if (btn) btn.textContent = '🌙';
   }
+}
+
+function _autoTheme() {
+  if (_themeManual) return; // respect manual override
+  const h = new Date().getHours();
+  const shouldBeDay = h >= 7 && h < 19; // 7 AM → 7 PM = day
+  const isDay = document.documentElement.classList.contains('day');
+  if (shouldBeDay !== isDay) {
+    _applyTheme(shouldBeDay);
+    // Clear manual override at auto-switch boundaries
+    localStorage.removeItem('theme_manual');
+  }
+}
+
+(function initTheme() {
+  const manual = localStorage.getItem('theme_manual');
+  if (manual) {
+    // User had manually set it — respect until the next auto boundary
+    _themeManual = true;
+    _applyTheme(manual === 'day');
+  } else {
+    // Auto mode based on time
+    const h = new Date().getHours();
+    _applyTheme(h >= 7 && h < 19);
+  }
+  // Check every minute for auto-switch
+  setInterval(() => {
+    _themeManual = !!localStorage.getItem('theme_manual');
+    _autoTheme();
+  }, 60000);
 })();
 
 document.getElementById('theme-toggle').addEventListener('click', () => {
   const isDay = document.documentElement.classList.toggle('day');
-  const btn = document.getElementById('theme-toggle');
+  const btn   = document.getElementById('theme-toggle');
   btn.textContent = isDay ? '☀️' : '🌙';
-  localStorage.setItem('theme', isDay ? 'day' : 'night');
-  // Animate the toggle
+  // Store manual override — cleared at next auto boundary (7 AM or 7 PM)
+  localStorage.setItem('theme_manual', isDay ? 'day' : 'night');
+  _themeManual = true;
   btn.style.transform = 'scale(1.3) rotate(20deg)';
   setTimeout(() => btn.style.transform = '', 300);
 });
@@ -4223,10 +5380,16 @@ function milestoneGlow(el) {
     updateMusicUI(d.music);
     updateLightUI(d.lights);
   } catch {}
+  // Default weather icon while real data loads
+  const _wxDefaultEl = document.getElementById('h-wx-icon');
+  if (_wxDefaultEl) _wxDefaultEl.innerHTML = _wxPartlyCloudy();
   loadWeather();
   loadAffirmation();
   loadHomeHero();
-  loadNews();
+  loadTodaysProtocol();
+  loadHydration();
+  loadCalendar();
+  loadStocks();
   loadFeedHistory();
   connectWS();
 })();
@@ -4419,12 +5582,428 @@ async function chatSend() {
 // Close on Escape key
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && chatOpen) collapseChat();
+  if (e.key === 'Escape') closeQuickLog();
 });
 
 // Enter key in chat input
 document.getElementById('chat-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') chatSend();
 });
+
+/* ══════════════════════════════════════════════════════════
+   AGENT STATUS BAR
+══════════════════════════════════════════════════════════ */
+async function loadAgentStatusBar() {
+  try {
+    const d = await api('/agents/status');
+    const state = d.state || {};
+    const now = Date.now();
+
+    function asbUpdate(agentKey, dotId, labelId, labelPrefix) {
+      const key = Object.keys(state).find(k => k.includes(agentKey));
+      const dot = document.getElementById(dotId);
+      const lbl = document.getElementById(labelId);
+      if (!dot || !lbl) return;
+      if (key && state[key]) {
+        const ts = new Date(state[key] * 1000);
+        const agoMin = Math.round((now - ts) / 60000);
+        const agoHrs = agoMin / 60;
+        const isToday = ts.toDateString() === new Date().toDateString();
+        dot.className = 'asb-dot ' + (isToday ? 'asb-dot-green' : agoHrs > 24 ? 'asb-dot-red' : 'asb-dot-yellow');
+        lbl.textContent = labelPrefix + ' ' + (agoMin < 1 ? 'just now' : agoMin < 60 ? agoMin + 'm ago' : Math.round(agoHrs) + 'h ago');
+      } else {
+        dot.className = 'asb-dot asb-dot-red';
+        lbl.textContent = labelPrefix + ' never';
+      }
+    }
+
+    asbUpdate('evolve',   'asb-dot-evolve',  'asb-evolve',  '⚙️ EVOLVE —');
+    asbUpdate('morning',  'asb-dot-morning', 'asb-morning', '☀️ Morning —');
+
+    // Hub is always green if we got here
+    const hubDot = document.getElementById('asb-dot-hub');
+    if (hubDot) hubDot.className = 'asb-dot asb-dot-green';
+
+    const upd = document.getElementById('asb-last-update');
+    if (upd) upd.textContent = 'updated ' + new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  } catch(e) {
+    // Hub offline indicator
+    const hubDot = document.getElementById('asb-dot-hub');
+    if (hubDot) hubDot.className = 'asb-dot asb-dot-red';
+    const hubLbl = document.getElementById('asb-server');
+    if (hubLbl) hubLbl.textContent = '🔴 Hub Offline';
+  }
+}
+loadAgentStatusBar();
+setInterval(loadAgentStatusBar, 60000);
+
+/* ══════════════════════════════════════════════════════════
+   HOME BIG ROCK SECTION
+══════════════════════════════════════════════════════════ */
+async function loadHomeRocks() {
+  const area = document.getElementById('home-rock-big-area');
+  if (!area) return;
+  const today = new Date().toISOString().slice(0,10);
+  try {
+    const data = await api('/rocks?date=' + today);
+    const big = (data.big || [])[0];
+    const mediums = data.medium || [];
+
+    if (!big && !mediums.length) {
+      area.innerHTML = `<div style="text-align:center;padding:.75rem 0;color:var(--muted);font-size:.82rem">
+        No rocks set for today.
+        <button class="btn btn-sm btn-accent" style="margin-left:.5rem" onclick="switchPanel('rocks',document.querySelector('.nav-item[onclick*=rocks]'))">Set Big Rock →</button>
+      </div>`;
+      return;
+    }
+
+    let html = '';
+    if (big) {
+      const done = big.status === 'complete';
+      const icon = { training:'🏊', nutrition:'🥗', recovery:'😴', mental:'🧠' }[big.category] || '🪨';
+      html += `<div class="home-big-rock-row">
+        <div class="home-big-rock-circle ${done ? 'done' : ''}" onclick="homeToggleRock(${big.id},'${big.status}',this,'big')" title="${done ? 'Mark incomplete' : 'Mark complete'}">${done ? '✓' : icon}</div>
+        <div class="home-big-rock-info">
+          <div class="home-big-rock-title">${big.title}</div>
+          <div class="home-big-rock-status">${done ? '✅ Complete' : '⏳ In progress'}</div>
+        </div>
+      </div>`;
+    }
+
+    if (mediums.length) {
+      html += '<div class="home-medium-chips">';
+      mediums.forEach(m => {
+        const done = m.status === 'complete';
+        const icon = { training:'🏊', nutrition:'🥗', recovery:'😴', mental:'🧠' }[m.category] || '🪨';
+        html += `<div class="home-med-chip ${done ? 'done' : ''}" onclick="homeToggleRock(${m.id},'${m.status}',this,'medium')">${done ? '✓' : icon} ${m.title}</div>`;
+      });
+      html += '</div>';
+    }
+
+    area.innerHTML = html;
+  } catch(e) {
+    area.innerHTML = '<div style="color:var(--muted);font-size:.8rem">Rocks unavailable</div>';
+  }
+}
+
+async function homeToggleRock(id, currentStatus, el, size) {
+  const newStatus = currentStatus === 'complete' ? 'incomplete' : 'complete';
+  const done = newStatus === 'complete';
+  // Optimistic update
+  if (size === 'big') {
+    el.classList.toggle('done', done);
+    el.textContent = done ? '✓' : '🪨';
+    const statusEl = el.nextElementSibling?.querySelector('.home-big-rock-status');
+    if (statusEl) statusEl.textContent = done ? '✅ Complete' : '⏳ In progress';
+  } else {
+    el.classList.toggle('done', done);
+    const txt = el.textContent.replace(/^[✓🪨🏊🥗😴🧠]\s?/, '');
+    el.innerHTML = (done ? '✓' : '🪨') + ' ' + txt;
+  }
+  el.setAttribute('onclick', `homeToggleRock(${id},'${newStatus}',this,'${size}')`);
+  try {
+    await fetch('/rocks/' + id, {
+      method:'PATCH',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({status: newStatus})
+    });
+  } catch(e) {}
+}
+
+/* ══════════════════════════════════════════════════════════
+   HOME METRICS STRIP
+══════════════════════════════════════════════════════════ */
+async function loadHomeMetricsStrip() {
+  try {
+    const log = await api('/ironmind/log?raw=true');
+    if (!log) return;
+    const set = (id, val, suffix) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = (val !== null && val !== undefined && val !== '') ? (val + (suffix||'')) : '—';
+    };
+    set('hms-steps',    log.steps    ? Math.round(log.steps/1000*10)/10+'k' : null);
+    if (log.resting_hr) {
+      const hrEl = document.getElementById('hms-hr');
+      if (hrEl) hrEl.innerHTML = `${log.resting_hr}<span style="font-size:.6rem;font-weight:400;color:var(--muted);margin-left:1px">bpm</span>`;
+    }
+    set('hms-hydration',log.hydration_oz ? Math.round(log.hydration_oz) : null, '');
+    set('hms-sleep',    log.sleep_hours ? parseFloat(log.sleep_hours).toFixed(1) : null, 'h');
+    const wEl = document.getElementById('hms-workout');
+    if (wEl) wEl.textContent = log.workout_done ? '✅' : '—';
+  } catch(e) {}
+}
+
+/* ══════════════════════════════════════════════════════════
+   QUICK LOG FAB
+══════════════════════════════════════════════════════════ */
+let _qlmOpen = false;
+let _qlmState = { water: 0, workout: false, mood: 0 };
+
+function toggleQuickLog() {
+  _qlmOpen = !_qlmOpen;
+  const modal = document.getElementById('quick-log-modal');
+  if (_qlmOpen) {
+    modal.style.display = 'flex';
+    _qlmState = { water: 0, workout: false, mood: 0 };
+    // reset UI
+    document.getElementById('qlm-water8').classList.remove('active');
+    document.getElementById('qlm-water16').classList.remove('active');
+    document.getElementById('qlm-workout').classList.remove('active');
+    document.querySelectorAll('#qlm-mood-emojis span').forEach(s => s.classList.remove('active'));
+    document.getElementById('qlm-mood-val').textContent = '—';
+  } else {
+    closeQuickLog();
+  }
+}
+
+function closeQuickLog() {
+  _qlmOpen = false;
+  const modal = document.getElementById('quick-log-modal');
+  modal.style.display = 'none';
+}
+
+function qlmWater(oz, btn) {
+  _qlmState.water = (_qlmState.water === oz) ? 0 : oz;
+  document.getElementById('qlm-water8').classList.toggle('active', _qlmState.water === 8);
+  document.getElementById('qlm-water16').classList.toggle('active', _qlmState.water === 16);
+}
+
+function qlmToggleWorkout(btn) {
+  _qlmState.workout = !_qlmState.workout;
+  btn.classList.toggle('active', _qlmState.workout);
+}
+
+function qlmSetMood(val, el) {
+  _qlmState.mood = val;
+  document.querySelectorAll('#qlm-mood-emojis span').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('qlm-mood-val').textContent = val + '/5';
+}
+
+async function qlmSubmit() {
+  const metrics = {};
+  if (_qlmState.water > 0) metrics.hydration_oz = _qlmState.water;
+  if (_qlmState.workout)   metrics.workout_done = 1;
+  if (_qlmState.mood > 0)  metrics.mood = _qlmState.mood * 2; // scale to 1-10
+  if (!Object.keys(metrics).length) { toast('Nothing to log', 'error'); return; }
+  try {
+    await api('/ironmind/log', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({metrics})
+    });
+    // Also log hydration to dedicated endpoint if water logged
+    if (_qlmState.water > 0) {
+      await fetch('/hydration/log', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({oz: _qlmState.water})});
+    }
+    toast('Logged! ✓', 'success');
+    closeQuickLog();
+    loadHydration();
+    loadHomeMetricsStrip();
+  } catch(e) {
+    toast(e.message, 'error');
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   TODAY PANEL
+══════════════════════════════════════════════════════════ */
+let todayMetricsBuilt = false;
+
+async function loadTodayPanel() {
+  const today = new Date().toISOString().slice(0,10);
+
+  // Build metrics grid if not done
+  if (!todayMetricsBuilt) {
+    todayMetricsBuilt = true;
+    const grid = document.getElementById('today-metrics-grid');
+    if (grid) {
+      grid.innerHTML = METRICS.map(m => {
+        const inputId = 'tmc-' + m.key;
+        if (m.type === 'check') return `
+          <div class="metric-item" id="tmi-${m.key}">
+            <div class="metric-icon">${m.icon}</div>
+            <div class="metric-name">${m.name}</div>
+            <input type="checkbox" class="metric-check" id="${inputId}"
+              onchange="this.closest('.metric-item').classList.toggle('logged',this.checked)">
+          </div>`;
+        return `
+          <div class="metric-item">
+            <div class="metric-icon">${m.icon}</div>
+            <div class="metric-name">${m.name}${m.unit?` (${m.unit})`:''}</div>
+            <input type="number" class="metric-input" id="${inputId}" placeholder="--"
+              oninput="this.closest('.metric-item').classList.toggle('logged',!!this.value)">
+          </div>`;
+      }).join('');
+    }
+  }
+
+  // Load rocks
+  try {
+    const data = await api('/rocks?date=' + today);
+    renderTodayRocks(data);
+  } catch {}
+
+  // Pre-fill metrics
+  try {
+    const log = await api('/ironmind/log?raw=true');
+    if (log) {
+      METRICS.forEach(m => {
+        const el = document.getElementById('tmc-' + m.key);
+        if (!el) return;
+        const val = log[m.key];
+        if (val === undefined || val === null) return;
+        if (m.type === 'check') { el.checked = !!val; el.closest('.metric-item')?.classList.toggle('logged', !!val); }
+        else if (val !== '') { el.value = val; el.closest('.metric-item')?.classList.toggle('logged', true); }
+      });
+    }
+  } catch {}
+
+  // Reflection state
+  if (localStorage.getItem('reflection_done_' + today)) {
+    document.getElementById('today-reflection-form').style.display = 'none';
+    document.getElementById('today-reflection-done').style.display = 'block';
+  }
+}
+
+function renderTodayRocks(data) {
+  const area = document.getElementById('today-rocks-area');
+  if (!area) return;
+  const big = (data.big || [])[0];
+  const mediums = data.medium || [];
+  const smalls = data.small || [];
+
+  if (!big && !mediums.length) {
+    area.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:.5rem 0">No rocks set today.</div>';
+    return;
+  }
+
+  let html = '';
+  if (big) {
+    const done = big.status === 'complete';
+    const icon = { training:'🏊', nutrition:'🥗', recovery:'😴', mental:'🧠' }[big.category] || '🪨';
+    html += `<div class="today-rock-big" onclick="toggleRock(${big.id},'${big.status}',this);setTimeout(()=>renderTodayRocks({}),300)">
+      <div class="today-big-circle ${done ? 'done' : ''}">${done ? '✓' : icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:.88rem">${big.title}</div>
+        <div style="font-size:.65rem;color:var(--muted);margin-top:.12rem">BIG ROCK · ${done ? '✅ COMPLETE' : '⏳ IN PROGRESS'}</div>
+      </div>
+    </div>`;
+  }
+
+  if (mediums.length) {
+    html += '<div class="today-rock-chips" style="margin-bottom:.5rem">';
+    mediums.forEach(m => {
+      const done = m.status === 'complete';
+      const icon = { training:'🏊', nutrition:'🥗', recovery:'😴', mental:'🧠' }[m.category] || '🪨';
+      html += `<div class="today-rock-chip ${done ? 'done' : ''}" onclick="toggleRock(${m.id},'${m.status}',this)">${done ? '✓' : icon} ${m.title}</div>`;
+    });
+    html += '</div>';
+  }
+
+  if (smalls.length) {
+    html += '<div class="today-rock-chips">';
+    smalls.forEach(s => {
+      const done = s.status === 'complete';
+      html += `<div class="today-rock-chip ${done ? 'done' : ''}" style="font-size:.6rem" onclick="toggleRock(${s.id},'${s.status}',this)"> ${done ? '✓' : '•'} ${s.title}</div>`;
+    });
+    html += '</div>';
+  }
+
+  area.innerHTML = html;
+}
+
+async function saveTodayMetrics() {
+  const data = {};
+  METRICS.forEach(m => {
+    const el = document.getElementById('tmc-' + m.key);
+    if (!el) return;
+    if (m.type === 'check') { data[m.key] = el.checked ? 1 : 0; }
+    else if (el.value !== '') data[m.key] = parseFloat(el.value);
+  });
+  try {
+    await api('/ironmind/log', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({metrics: data})});
+    toast('Metrics saved!', 'success');
+    loadHomeMetricsStrip();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function saveTodayReflection() {
+  const right   = document.getElementById('tr-right').value.trim();
+  const corners = document.getElementById('tr-corners').value.trim();
+  const tmrw    = document.getElementById('tr-tomorrow').value.trim();
+  if (!right && !corners && !tmrw) { toast('Write something first.', 'error'); return; }
+  try {
+    await api('/ironmind/journal', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ went_right: right, cut_corners: corners, tomorrow_std: tmrw })
+    });
+    const today = new Date().toISOString().slice(0,10);
+    localStorage.setItem('reflection_done_' + today, '1');
+    document.getElementById('today-reflection-form').style.display = 'none';
+    document.getElementById('today-reflection-done').style.display = 'block';
+    toast('Reflection saved ✓', 'success');
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   EXTEND PANEL LOADER FOR NEW PANELS
+══════════════════════════════════════════════════════════ */
+const _origLoadPanel = loadPanel;
+loadPanel = function(id) {
+  _origLoadPanel(id);
+  if (id === 'today') loadTodayPanel();
+};
+
+/* ══════════════════════════════════════════════════════════
+   MOBILE TAB BAR ACTIVE STATE
+══════════════════════════════════════════════════════════ */
+const _origSwitchPanel = switchPanel;
+switchPanel = function(id, btn) {
+  _origSwitchPanel(id, btn);
+  // Sync mobile tabs
+  document.querySelectorAll('.mobile-tabs button').forEach(b => {
+    const panelId = b.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+    b.classList.toggle('active', panelId === id);
+  });
+};
+
+/* ══════════════════════════════════════════════════════════
+   HOME NEWS: render as compact list (not grid)
+══════════════════════════════════════════════════════════ */
+const _origLoadNews = loadNews;
+loadNews = async function() {
+  const el = document.getElementById('home-news');
+  if (!el) return;
+  el.innerHTML = '<div class="skel skel-text" style="margin-bottom:.4rem"></div><div class="skel skel-text sm"></div>';
+  try {
+    const d = await api('/news');
+    const arts = (d.articles || []).slice(0, 5);
+    if (!arts.length) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:.8rem">No headlines available</div>';
+      return;
+    }
+    el.innerHTML = arts.map(a => {
+      const timeStr = a.pub_date ? timeAgo(new Date(a.pub_date)) : '';
+      const isTech = a.source && a.source.toLowerCase().includes('tech');
+      return `<a href="${a.url || '#'}" target="_blank" rel="noopener" style="display:block;text-decoration:none;padding:.45rem 0;border-bottom:1px solid var(--glass-border)">
+        <div style="display:flex;gap:.5rem;align-items:baseline">
+          <span class="news-source-pill ${isTech ? 'tech' : ''}" style="flex-shrink:0">${a.source||'News'}</span>
+          <span style="font-size:.78rem;color:var(--text);line-height:1.4">${a.title}</span>
+        </div>
+        ${timeStr ? `<div style="font-size:.6rem;color:var(--muted);margin-top:.18rem;padding-left:0">${timeStr}</div>` : ''}
+      </a>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = `<div style="color:var(--muted);font-size:.8rem">${e.message}</div>`;
+  }
+};
+
+/* ── Load new home data on init ── */
+loadHomeRocks();
+loadHomeMetricsStrip();
+loadNews(); // re-run with new renderer
 </script>
 </body>
 </html>

@@ -4,6 +4,7 @@
 import os, json, time, requests
 from pathlib import Path
 from datetime import datetime
+from functools import wraps
 
 # ── Paths ──────────────────────────────────────────────────────────────────
 AGENT_DIR  = Path(__file__).parent
@@ -22,6 +23,9 @@ ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 TELEGRAM_TOKEN    = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID  = os.environ.get("TELEGRAM_CHAT_ID", "7937301907")
 HUB_BASE          = "http://localhost:8888"
+EMAIL_FROM        = os.environ.get("EMAIL_FROM", "")
+EMAIL_TO          = os.environ.get("EMAIL_TO", "")
+EMAIL_APP_PASS    = os.environ.get("EMAIL_APP_PASS", "")
 
 
 # ── Claude API ─────────────────────────────────────────────────────────────
@@ -153,6 +157,42 @@ def mark_fired(key: str):
     state = load_state()
     state[key] = time.time()
     save_state(state)
+
+
+# ── Email ──────────────────────────────────────────────────────────────────
+def send_email(subject: str, body: str, to: str = None) -> bool:
+    import smtplib
+    from email.mime.text import MIMEText
+    recipient = to or EMAIL_TO
+    if not all([EMAIL_FROM, EMAIL_APP_PASS, recipient]):
+        print("[Email] Not configured — set EMAIL_FROM, EMAIL_APP_PASS, EMAIL_TO in .env")
+        return False
+    try:
+        msg = MIMEText(body, "plain")
+        msg["Subject"] = subject
+        msg["From"]    = EMAIL_FROM
+        msg["To"]      = recipient
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
+            s.login(EMAIL_FROM, EMAIL_APP_PASS)
+            s.send_message(msg)
+        return True
+    except Exception as e:
+        print(f"[Email] Error: {e}")
+        return False
+
+
+# ── Retry utility ──────────────────────────────────────────────────────────
+def fetch_with_retry(fn, retries=3, delay=2, fallback=None):
+    """Call fn() up to `retries` times with `delay` seconds between. Returns fallback on total failure."""
+    for attempt in range(retries):
+        try:
+            return fn()
+        except Exception as e:
+            if attempt < retries - 1:
+                time.sleep(delay)
+            else:
+                print(f"[retry] {fn.__name__ if hasattr(fn, '__name__') else 'fn'} failed after {retries} attempts: {e}")
+    return fallback() if callable(fallback) else fallback
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────

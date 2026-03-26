@@ -1,15 +1,20 @@
 #!/usr/bin/env python3
 """
-EVOLVE Protocol — 5:00 AM daily system evolution cycle.
+EVOLVE Protocol — 5:00 AM daily evolution + preparation cycle.
 
-E = Evaluate   → analyze yesterday's behavior
-V = Verify     → system health check
-O = Optimize   → update memory with behavioral insights
-L = Learn      → compare plan vs reality
-V = Visualize  → build evolution report
-E = Expand     → propose 1 micro-feature with confidence score
+5 AM Phase 1 — PREPARE:
+  Pull yesterday's completion/health data, generate adapted plan for today,
+  store pre-built recommendations in daily_prep table for morning agent.
 
-Runtime: ~30–90 seconds. Sends full report to Telegram.
+5 AM Phase 2 — EVOLVE (E.V.O.L.V.E.):
+  E = Evaluate   → yesterday's behavior
+  V = Verify     → system health check
+  O = Optimize   → update memory with insights
+  L = Learn      → compare plan vs reality
+  V = Visualize  → build evolution report
+  E = Expand     → propose 1 micro-feature
+
+Runtime: ~60–120 seconds. Sends full report to Telegram.
 """
 
 import json
@@ -21,26 +26,110 @@ from agents import adler_memory
 
 AGENT = "evolve"
 EVOLVE_KEY = f"evolve_{today_str()}"
-EVOLVE_STATE_FILE = ROOT_DIR / "evolve_state.json"
 
 
-# ── Confidence scoring ─────────────────────────────────────────────────────────
 def confidence(evidence_count: int, consistency_days: int, impact: str = "low") -> int:
-    """
-    Score 0-100. Only scores ≥70 get auto-applied.
-    evidence_count: how many data points support this insight
-    consistency_days: how many days this pattern held
-    impact: low/medium/high (higher impact = more cautious)
-    """
-    base = min(evidence_count * 12, 60)
-    base += min(consistency_days * 8, 30)
-    impact_penalty = {"low": 0, "medium": -5, "high": -15}.get(impact, 0)
-    return max(0, min(100, base + impact_penalty))
+    base = min(evidence_count * 12, 60) + min(consistency_days * 8, 30)
+    return max(0, min(100, base + {"low": 0, "medium": -5, "high": -15}.get(impact, 0)))
 
 
-# ── Phase 1: EVALUATE — yesterday's behavior ──────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# PHASE 1: PREPARE
+# ══════════════════════════════════════════════════════════════════════════════
+
+def preparation_phase() -> dict:
+    log(AGENT, "PREP — 5 AM preparation phase starting")
+    from database import daily_prep_save, im_get_log, rocks_get
+
+    yesterday  = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+    today_date = today_str()
+
+    yday_log = {}
+    try:
+        yday_log = im_get_log(yesterday) or {}
+    except Exception as e:
+        log(AGENT, f"PREP — yesterday log error: {e}")
+
+    completion_rate = 0.0
+    try:
+        yday_rocks = rocks_get(yesterday)
+        if yday_rocks:
+            done = sum(1 for r in yday_rocks if r.get("status") == "complete")
+            completion_rate = round(done / len(yday_rocks), 2)
+            log(AGENT, f"PREP — rocks {done}/{len(yday_rocks)} = {int(completion_rate*100)}%")
+    except Exception as e:
+        log(AGENT, f"PREP — rocks error: {e}")
+
+    sleep = yday_log.get("sleep_hours") or 0
+    hrv   = yday_log.get("hrv") or 0
+    fatigue_score = 0
+    if sleep > 0 and sleep < 6:
+        fatigue_score += 30
+    elif sleep > 0 and sleep < 7:
+        fatigue_score += 15
+    if hrv and hrv < 40:
+        fatigue_score += 20
+    if yday_log.get("workout_done") == 0:
+        fatigue_score += 10
+
+    prompt = f"""You are Jordan's performance AI preparing his 7 AM briefing data at 5 AM.
+
+Yesterday:
+- Sleep: {sleep or 'no data'} hours  |  HRV: {hrv or 'no data'}
+- Workout done: {bool(yday_log.get('workout_done'))}
+- Rock completion: {int(completion_rate * 100)}%
+- Fatigue score: {fatigue_score}/60
+
+Today's scheduled: 6 mile run
+
+Return JSON only:
+{{
+  "adapted_training": "Adjusted training recommendation (1 sentence)",
+  "adapted_nutrition": "Breakfast, lunch, hydration (2 sentences)",
+  "coaching_note": "One sharp tactical note based on yesterday (1 sentence)"
+}}"""
+
+    prep = {}
+    try:
+        raw = claude(prompt, max_tokens=250)
+        if "{" in raw:
+            raw = raw[raw.index("{"):raw.rindex("}")+1]
+        prep = json.loads(raw)
+    except Exception as e:
+        log(AGENT, f"PREP — Claude error: {e}")
+        prep = {
+            "adapted_training": "Stay on schedule — 6 mile run at moderate pace.",
+            "adapted_nutrition": "High protein breakfast. Clean lunch. 100oz water.",
+            "coaching_note": "Yesterday is done. Today's execution is all that matters.",
+        }
+
+    try:
+        daily_prep_save(
+            today_date,
+            adapted_training=prep.get("adapted_training", ""),
+            adapted_nutrition=prep.get("adapted_nutrition", ""),
+            fatigue_score=fatigue_score,
+            completion_yesterday=completion_rate,
+            notes=prep.get("coaching_note", ""),
+        )
+        log(AGENT, f"PREP — Stored. fatigue={fatigue_score}, completion={completion_rate}")
+    except Exception as e:
+        log(AGENT, f"PREP — DB save error: {e}")
+
+    return {
+        "fatigue_score": fatigue_score,
+        "completion_yesterday": completion_rate,
+        "adapted_training": prep.get("adapted_training", ""),
+        "coaching_note": prep.get("coaching_note", ""),
+    }
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PHASE 2: EVOLVE
+# ══════════════════════════════════════════════════════════════════════════════
+
 def evaluate_yesterday() -> dict:
-    log(AGENT, "E — Evaluating yesterday's behavior")
+    log(AGENT, "E — Evaluating yesterday")
     try:
         rows = req.get(f"{HUB_BASE}/history", timeout=10).json()
     except Exception as e:
@@ -48,82 +137,55 @@ def evaluate_yesterday() -> dict:
         return {}
 
     yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-    yesterday_rows = [r for r in rows if (r.get("ts") or "").startswith(yesterday)]
+    yesterday_rows = [r for r in rows if (r.get("ts") or "").startswith(yesterday)] or rows[:30]
 
-    if not yesterday_rows:
-        # Fall back to all recent history
-        yesterday_rows = rows[:30]
-
-    # Count action types
-    action_counts = {}
-    light_colors = []
-    music_queries = []
-    peak_hours = {}
-
+    action_counts, light_colors, music_queries, peak_hours = {}, [], [], {}
     for r in yesterday_rows:
         action = r.get("action", "unknown")
         action_counts[action] = action_counts.get(action, 0) + 1
-
         ts = r.get("ts", "")
-        if ts and len(ts) > 13:
+        if len(ts) > 13:
             try:
-                hour = int(ts[11:13])
-                peak_hours[hour] = peak_hours.get(hour, 0) + 1
+                h = int(ts[11:13])
+                peak_hours[h] = peak_hours.get(h, 0) + 1
             except ValueError:
                 pass
-
         intent = r.get("intent") or {}
-        if action == "lights" and isinstance(intent, dict):
-            col = intent.get("color")
-            if col:
-                light_colors.append(col)
-        if action == "music" and isinstance(intent, dict):
-            q = intent.get("query")
-            if q:
-                music_queries.append(q)
-
-    most_active_hour = max(peak_hours, key=peak_hours.get) if peak_hours else None
-    top_action = max(action_counts, key=action_counts.get) if action_counts else None
-    fav_color = max(set(light_colors), key=light_colors.count) if light_colors else None
+        if action == "lights" and isinstance(intent, dict) and intent.get("color"):
+            light_colors.append(intent["color"])
+        if action == "music" and isinstance(intent, dict) and intent.get("query"):
+            music_queries.append(intent["query"])
 
     return {
         "total_commands": len(yesterday_rows),
         "action_counts": action_counts,
-        "top_action": top_action,
-        "most_active_hour": most_active_hour,
-        "favorite_light_color": fav_color,
+        "top_action": max(action_counts, key=action_counts.get) if action_counts else None,
+        "most_active_hour": max(peak_hours, key=peak_hours.get) if peak_hours else None,
+        "favorite_light_color": max(set(light_colors), key=light_colors.count) if light_colors else None,
         "music_queries": music_queries[:5],
-        "peak_hours": peak_hours,
     }
 
 
-# ── Phase 2: VERIFY — system health ───────────────────────────────────────────
 def verify_health() -> dict:
-    log(AGENT, "V — Verifying system health")
+    log(AGENT, "V — Verifying health")
     results = {}
-
-    # Check Hue bridge
     HUE_BRIDGE = os.environ.get("HUE_BRIDGE", "192.168.12.225")
     HUE_KEY    = os.environ.get("HUE_KEY", "")
+
     try:
         t0 = time.time()
         r = req.get(f"http://{HUE_BRIDGE}/api/{HUE_KEY}/lights", timeout=5)
-        latency_ms = int((time.time() - t0) * 1000)
-        light_count = len(r.json()) if r.ok else 0
-        results["hue"] = {"ok": r.ok, "latency_ms": latency_ms, "lights": light_count}
+        results["hue"] = {"ok": r.ok, "latency_ms": int((time.time()-t0)*1000), "lights": len(r.json()) if r.ok else 0}
     except Exception as e:
         results["hue"] = {"ok": False, "error": str(e)}
 
-    # Check hub server
     try:
         t0 = time.time()
         r = req.get(f"{HUB_BASE}/status", timeout=5)
-        latency_ms = int((time.time() - t0) * 1000)
-        results["hub"] = {"ok": r.ok, "latency_ms": latency_ms}
+        results["hub"] = {"ok": r.ok, "latency_ms": int((time.time()-t0)*1000)}
     except Exception as e:
         results["hub"] = {"ok": False, "error": str(e)}
 
-    # Check Anthropic API
     try:
         t0 = time.time()
         r = req.post(
@@ -132,198 +194,139 @@ def verify_health() -> dict:
             json={"model": "claude-haiku-4-5-20251001", "max_tokens": 5, "messages": [{"role": "user", "content": "ping"}]},
             timeout=10,
         )
-        latency_ms = int((time.time() - t0) * 1000)
-        results["anthropic_api"] = {"ok": r.ok, "latency_ms": latency_ms}
+        results["anthropic_api"] = {"ok": r.ok, "latency_ms": int((time.time()-t0)*1000)}
     except Exception as e:
         results["anthropic_api"] = {"ok": False, "error": str(e)}
 
-    # Check agent log for recent errors
     log_file = ROOT_DIR / "agent.log"
     error_count = 0
     if log_file.exists():
         lines = log_file.read_text().splitlines()[-200:]
-        error_count = sum(1 for l in lines if "error" in l.lower() or "Error" in l)
+        error_count = sum(1 for l in lines if "error" in l.lower())
     results["agent_errors_24h"] = error_count
 
-    # Check agent state — which agents ran recently
     state = load_state()
-    agents_ran = []
-    for key, ts in state.items():
-        if time.time() - float(ts) < 86400:
-            agents_ran.append(key.split("_")[0])
-    results["agents_active"] = list(set(agents_ran))
+    results["agents_active"] = list(set(k.split("_")[0] for k, ts in state.items() if time.time() - float(ts) < 86400))
 
     return results
 
 
-# ── Phase 3: OPTIMIZE + LEARN — memory + plan vs reality ──────────────────────
-def optimize_and_learn(evaluation: dict) -> list[dict]:
-    """Returns a list of proposed changes, each with a confidence score."""
-    log(AGENT, "O/L — Optimizing and learning from data")
+def optimize_and_learn(evaluation: dict) -> list:
+    log(AGENT, "O/L — Learning")
     proposals = []
     mem = adler_memory.load()
 
-    # Insight: favorite light color
     fav_color = evaluation.get("favorite_light_color")
     if fav_color:
         history = mem.get("evolve_color_history", {})
         history[fav_color] = history.get(fav_color, 0) + 1
         mem["evolve_color_history"] = history
         adler_memory.save(mem)
-
-        consistency = history.get(fav_color, 1)
-        score = confidence(evaluation.get("total_commands", 1), consistency, "low")
+        score = confidence(evaluation.get("total_commands", 1), history[fav_color], "low")
         proposals.append({
             "type": "preference_update",
-            "description": f"Jordan's most-used light color: {fav_color} ({consistency} days)",
+            "description": f"Preferred light: {fav_color} ({history[fav_color]} days)",
             "action": {"category": "lights", "context": "default", "value": fav_color},
             "confidence": score,
             "auto_apply": score >= 70,
         })
 
-    # Insight: peak usage hour
     peak_hour = evaluation.get("most_active_hour")
     if peak_hour is not None:
         hour_history = mem.get("evolve_peak_hours", [])
-        hour_history.append(peak_hour)
-        hour_history = hour_history[-14:]  # last 14 days
+        hour_history = (hour_history + [peak_hour])[-14:]
         mem["evolve_peak_hours"] = hour_history
         adler_memory.save(mem)
-
-        consistency = hour_history.count(peak_hour)
-        score = confidence(len(hour_history), consistency, "low")
+        score = confidence(len(hour_history), hour_history.count(peak_hour), "low")
+        h12  = peak_hour if peak_hour <= 12 else peak_hour - 12
         ampm = "AM" if peak_hour < 12 else "PM"
-        h12 = peak_hour if peak_hour <= 12 else peak_hour - 12
         proposals.append({
             "type": "pattern_insight",
-            "description": f"Jordan is most active at {h12}:00 {ampm} ({consistency}/{len(hour_history)} days)",
+            "description": f"Most active at {h12}:00 {ampm} ({hour_history.count(peak_hour)}/{len(hour_history)} days)",
             "confidence": score,
             "auto_apply": score >= 80,
         })
 
-    # Use Claude to analyze music patterns and generate behavioral insight
     if evaluation.get("music_queries"):
         try:
-            music_text = ", ".join(evaluation["music_queries"])
             insight = claude(
-                f"Jordan played: {music_text}. Write one sharp behavioral insight about his music taste or mood pattern. 15 words max.",
+                f"Jordan played: {', '.join(evaluation['music_queries'])}. One sharp behavioral insight, 15 words max.",
                 max_tokens=40
             )
-            proposals.append({
-                "type": "behavioral_insight",
-                "description": insight,
-                "confidence": 65,
-                "auto_apply": False,
-            })
+            proposals.append({"type": "behavioral_insight", "description": insight, "confidence": 65, "auto_apply": False})
         except Exception:
             pass
 
     return proposals
 
 
-# ── Phase 4: EXPAND — daily micro-feature ─────────────────────────────────────
 def expand_feature(evaluation: dict, health: dict) -> dict:
-    """Generate 1 micro-feature suggestion based on current state."""
-    log(AGENT, "E — Generating feature expansion")
+    log(AGENT, "E — Feature expansion")
+    prompt = f"""EVOLVE Protocol for Jordan's Smart Hub.
+Yesterday: {evaluation.get('total_commands', 0)} commands. Top: {evaluation.get('top_action', 'lights')}.
+Hub: {health.get('hub',{}).get('latency_ms','?')}ms. Errors: {health.get('agent_errors_24h', 0)}.
 
-    top_action = evaluation.get("top_action", "lights")
-    total = evaluation.get("total_commands", 0)
-
-    prompt = f"""You are the EVOLVE Protocol for Jordan's Smart Hub.
-
-Yesterday's usage: {total} commands. Top action: {top_action}.
-System health: Hue {health.get('hue',{}).get('latency_ms','?')}ms, Hub {health.get('hub',{}).get('latency_ms','?')}ms.
-Active agents: {', '.join(health.get('agents_active', []))}.
-
-Propose ONE small, specific, buildable micro-feature that would improve Jordan's daily experience.
-Requirements: implementable in <50 lines of Python or CSS, doesn't break existing code, directly useful.
-
-Return JSON only:
-{{
-  "name": "Feature name (5 words max)",
-  "description": "What it does (1 sentence)",
-  "implementation_hint": "How to build it (1 sentence)",
-  "confidence": <50-100>,
-  "impact": "low|medium|high"
-}}"""
+Propose ONE small buildable micro-feature (<50 lines, non-breaking, directly useful).
+JSON only:
+{{"name":"5 words max","description":"1 sentence","implementation_hint":"1 sentence","confidence":75,"impact":"medium"}}"""
 
     try:
-        raw = claude(prompt, max_tokens=200)
+        raw = claude(prompt, max_tokens=150)
         if "{" in raw:
             raw = raw[raw.index("{"):raw.rindex("}")+1]
-        feature = json.loads(raw)
-        return feature
+        return json.loads(raw)
     except Exception as e:
-        log(AGENT, f"Feature generation error: {e}")
-        return {
-            "name": "Quick-access scenes button",
-            "description": "Add a 1-tap scene row to the home panel for your most-used light scenes.",
-            "implementation_hint": "Fetch /scenes, render as pill buttons above the feed card.",
-            "confidence": 72,
-            "impact": "medium",
-        }
+        log(AGENT, f"Feature error: {e}")
+        return {"name": "Rock completion Telegram alert", "description": "Ping when all daily rocks complete.",
+                "implementation_hint": "POST /rocks checks 100% completion, fires telegram_send.", "confidence": 75, "impact": "medium"}
 
 
-# ── Phase 5: VISUALIZE — build and send report ────────────────────────────────
-def build_report(evaluation: dict, health: dict, proposals: list, feature: dict, duration_s: float) -> str:
+def build_report(evaluation: dict, health: dict, proposals: list, feature: dict,
+                 prep: dict, duration_s: float) -> str:
     auto_applied = [p for p in proposals if p.get("auto_apply")]
-    pending = [p for p in proposals if not p.get("auto_apply")]
-
+    pending      = [p for p in proposals if not p.get("auto_apply")]
     hue_ok = "✅" if health.get("hue", {}).get("ok") else "❌"
     hub_ok = "✅" if health.get("hub", {}).get("ok") else "❌"
     api_ok = "✅" if health.get("anthropic_api", {}).get("ok") else "❌"
-    hue_ms = health.get("hue", {}).get("latency_ms", "?")
-    hub_ms = health.get("hub", {}).get("latency_ms", "?")
-    api_ms = health.get("anthropic_api", {}).get("latency_ms", "?")
-    errors  = health.get("agent_errors_24h", 0)
-
-    top_action = evaluation.get("top_action", "—")
-    total_cmds = evaluation.get("total_commands", 0)
-    peak_h = evaluation.get("most_active_hour")
-    peak_str = f"{peak_h}:00" if peak_h is not None else "—"
-    fav_color = evaluation.get("favorite_light_color", "—")
-
-    feat_conf = feature.get("confidence", 0)
-    feat_emoji = "🟢" if feat_conf >= 70 else "🟡"
+    fatigue    = prep.get("fatigue_score", 0)
+    completion = int(prep.get("completion_yesterday", 0) * 100)
+    fat_label  = "🟢 Fresh" if fatigue < 20 else "🟡 Moderate" if fatigue < 40 else "🔴 High"
+    feat_emoji = "🟢" if feature.get("confidence", 0) >= 70 else "🟡"
 
     lines = [
-        "⚡ <b>EVOLVE Protocol — Daily Evolution Report</b>",
+        "⚡ <b>EVOLVE — Daily Evolution Report</b>",
         f"<i>{datetime.now().strftime('%A, %B %d · %I:%M %p')}</i>",
         "",
+        "━━━ PREPARE ━━━",
+        f"Yesterday completion: <b>{completion}%</b>  ·  Fatigue: <b>{fat_label}</b>",
+        f"Adapted training: {prep.get('adapted_training','—')}",
+        f"💬 {prep.get('coaching_note','')}",
+        "",
         "━━━ E · EVALUATE ━━━",
-        f"Commands yesterday: <b>{total_cmds}</b>",
-        f"Top action: <b>{top_action}</b>",
-        f"Peak hour: <b>{peak_str}</b>",
-        f"Favorite lights: <b>{fav_color}</b>",
+        f"Commands: <b>{evaluation.get('total_commands',0)}</b>  Top: <b>{evaluation.get('top_action','—')}</b>",
+        f"Peak: <b>{evaluation.get('most_active_hour','—')}:00</b>  Fav lights: <b>{evaluation.get('favorite_light_color','—')}</b>",
         "",
         "━━━ V · VERIFY ━━━",
-        f"{hue_ok} Hue Bridge — {hue_ms}ms · {health.get('hue',{}).get('lights',0)} lights",
-        f"{hub_ok} Hub Server — {hub_ms}ms",
-        f"{api_ok} Claude API — {api_ms}ms",
-        f"{'⚠️' if errors > 5 else '✅'} Agent errors (24h): {errors}",
-        f"Active agents: {', '.join(health.get('agents_active', ['none']))}",
+        f"{hue_ok} Hue  {hub_ok} Hub  {api_ok} Claude API",
+        f"{'⚠️' if health.get('agent_errors_24h',0) > 5 else '✅'} Errors: {health.get('agent_errors_24h',0)}  ·  Active: {', '.join(health.get('agents_active',['none']))}",
         "",
-        "━━━ O/L · OPTIMIZE + LEARN ━━━",
+        "━━━ O/L · LEARN ━━━",
     ]
-
     for p in auto_applied:
-        lines.append(f"✅ [auto-applied, conf {p['confidence']}%] {p['description']}")
+        lines.append(f"✅ [auto {p['confidence']}%] {p['description']}")
     for p in pending:
-        lines.append(f"💡 [conf {p['confidence']}%] {p['description']}")
-
+        lines.append(f"💡 [{p['confidence']}%] {p['description']}")
     if not proposals:
-        lines.append("No significant patterns yet — more data needed.")
-
+        lines.append("Building pattern history — more data needed.")
     lines += [
         "",
         "━━━ E · EXPAND ━━━",
-        f"{feat_emoji} <b>{feature.get('name', 'Feature')}</b> [conf {feat_conf}%]",
-        f"{feature.get('description', '')}",
-        f"<i>{feature.get('implementation_hint', '')}</i>",
+        f"{feat_emoji} <b>{feature.get('name','—')}</b> [conf {feature.get('confidence',0)}%]",
+        feature.get("description", ""),
+        f"<i>{feature.get('implementation_hint','')}</i>",
         "",
-        f"⏱ Evolution complete in {duration_s:.1f}s",
+        f"⏱ {duration_s:.1f}s  ·  Morning Brief fires at 7:00 AM ☀️",
     ]
-
     return "\n".join(lines)
 
 
@@ -336,47 +339,39 @@ def run():
     log(AGENT, "=== EVOLVE Protocol starting ===")
     t_start = time.time()
 
-    telegram_send("⚡ <b>EVOLVE Protocol initiated</b>\nRunning daily system evolution...")
+    telegram_send("⚙️ <b>EVOLVE — 5 AM Protocol</b>\nPreparing today's plan + running system evolution...")
 
-    # Run all phases
+    prep       = preparation_phase()
     evaluation = evaluate_yesterday()
     log(AGENT, f"Evaluated: {evaluation.get('total_commands', 0)} commands")
 
     health = verify_health()
-    log(AGENT, f"Health check complete. Hue: {health.get('hue',{}).get('ok')}, Hub: {health.get('hub',{}).get('ok')}")
+    log(AGENT, f"Health: Hue={health.get('hue',{}).get('ok')}, Hub={health.get('hub',{}).get('ok')}")
 
     proposals = optimize_and_learn(evaluation)
-    log(AGENT, f"Generated {len(proposals)} proposals")
 
-    # Auto-apply high-confidence preference updates
     for p in proposals:
         if p.get("auto_apply") and p.get("type") == "preference_update":
             try:
                 action = p.get("action", {})
-                adler_memory.update_preference(
-                    action.get("category", "lights"),
-                    action.get("context", "default"),
-                    action.get("value", "")
-                )
+                adler_memory.update_preference(action.get("category"), action.get("context"), action.get("value"))
                 log(AGENT, f"Auto-applied: {p['description']}")
             except Exception as e:
                 log(AGENT, f"Auto-apply failed: {e}")
 
-    feature = expand_feature(evaluation, health)
-    log(AGENT, f"Feature: {feature.get('name')} [conf {feature.get('confidence')}%]")
-
+    feature  = expand_feature(evaluation, health)
     duration = time.time() - t_start
-    report = build_report(evaluation, health, proposals, feature, duration)
+    report   = build_report(evaluation, health, proposals, feature, prep, duration)
 
     telegram_send(report)
     mark_fired(EVOLVE_KEY)
 
-    # Record to Adler's memory
     try:
         adler_memory.record_mission(
             "EVOLVE daily protocol",
-            f"Ran evolution cycle: {evaluation.get('total_commands',0)} commands analyzed, {len(proposals)} insights, feature: {feature.get('name')}",
-            ["evaluate", "verify", "optimize", "learn", "expand"]
+            f"Evolution: {evaluation.get('total_commands',0)} commands, "
+            f"completion={int(prep.get('completion_yesterday',0)*100)}%, fatigue={prep.get('fatigue_score',0)}",
+            ["prepare", "evaluate", "verify", "optimize", "learn", "expand"]
         )
     except Exception:
         pass
