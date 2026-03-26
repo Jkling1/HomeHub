@@ -101,7 +101,7 @@ def hub_weather() -> str:
 
 def hub_ironmind_log() -> dict:
     try:
-        return requests.get(f"{HUB_BASE}/ironmind/log", timeout=10).json().get("result", {})
+        return requests.get(f"{HUB_BASE}/ironmind/log?raw=true", timeout=10).json()
     except:
         return {}
 

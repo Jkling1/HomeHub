@@ -69,10 +69,11 @@ def _sunrise_thread():
             log(AGENT, f"Sunrise error: {e}")
 
 def get_plan_context() -> dict:
-    """Fetch today's IronMind plan."""
+    """Fetch today's IronMind plan as a raw dict."""
     try:
-        r = requests.get(f"{HUB_BASE}/ironmind/plan", timeout=10)
-        return r.json().get("result", {})
+        from database import im_get_plan
+        from datetime import date
+        return im_get_plan(date.today().strftime("%Y-%m-%d")) or {}
     except:
         return {}
 
