@@ -31,6 +31,9 @@ def main():
     elif agent == "evolve":
         from agents.evolve import run
         run()
+    elif agent == "ironman_daily":
+        from agents.ironman_daily import run
+        run()
     else:
         print(f"Unknown agent: {agent}")
         sys.exit(1)

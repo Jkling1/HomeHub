@@ -321,6 +321,35 @@ async def briefing():
     return {"result": exec_briefing()}
 
 
+@app.get("/news")
+async def get_news():
+    import urllib.request
+    import xml.etree.ElementTree as ET
+    feeds = [
+        ("BBC World", "https://feeds.bbci.co.uk/news/world/rss.xml"),
+        ("BBC Tech",  "https://feeds.bbci.co.uk/news/technology/rss.xml"),
+    ]
+    articles = []
+    for source, url in feeds:
+        try:
+            r = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(r, timeout=6) as resp:
+                root = ET.fromstring(resp.read().decode("utf-8"))
+            channel = root.find("channel")
+            for item in (channel.findall("item") if channel is not None else [])[:4]:
+                pub = item.findtext("pubDate", "")
+                articles.append({
+                    "title":       (item.findtext("title") or "").strip(),
+                    "description": (item.findtext("description") or "").strip()[:140],
+                    "url":         item.findtext("link") or "",
+                    "source":      source,
+                    "pub_date":    pub,
+                })
+        except Exception:
+            pass
+    return {"articles": articles[:8]}
+
+
 @app.get("/ironmind/plan")
 async def im_plan():
     import ironmind
@@ -328,8 +357,15 @@ async def im_plan():
 
 
 @app.get("/ironmind/log")
-async def im_get_log():
+async def im_get_log(raw: bool = False):
+    from database import im_get_log as db_get_log
     import ironmind
+    from datetime import date as _date
+    today = _date.today().strftime("%Y-%m-%d")
+    if raw:
+        row = db_get_log(today) or {}
+        row["score"] = ironmind._compute_score(row) if row else 0
+        return row
     return {"result": ironmind.get_log()}
 
 
@@ -371,6 +407,49 @@ async def im_identity():
 async def im_journal():
     import ironmind
     return {"result": ironmind.get_journal()}
+
+
+class TrainingDataRequest(BaseModel):
+    date: str = ""
+    weight: float = None
+    sleep_hours: float = None
+    resting_hr: int = None
+    hrv: float = None
+    calories_burned: int = None
+    active_calories: int = None
+    steps: int = None
+    run_distance: float = None
+    cycle_distance: float = None
+    swim_distance: float = None
+    workouts: list = []
+    effort_level: int = None
+    fatigue_level: int = None
+    notes: str = ""
+
+
+@app.post("/ironmind/training")
+async def im_training_log(req_body: TrainingDataRequest):
+    import ironmind
+    from datetime import date as _date
+    date_str = req_body.date or _date.today().strftime("%Y-%m-%d")
+    data = {k: v for k, v in req_body.dict().items() if v is not None and v != "" and v != []}
+    data["date"] = date_str
+    protocol = ironmind.save_training_data(data, date_str)
+    return {"protocol": protocol, "date": date_str}
+
+
+@app.get("/ironmind/training")
+async def im_training_get(date: str = ""):
+    import ironmind
+    from datetime import date as _date
+    date_str = date or _date.today().strftime("%Y-%m-%d")
+    return ironmind.get_training_protocol(date_str)
+
+
+@app.get("/ironmind/training/history")
+async def im_training_history():
+    import ironmind
+    return ironmind.get_training_history(14)
 
 
 @app.get("/scenes")
@@ -534,6 +613,118 @@ async def agents_log():
     return {"lines": lines[-100:]}
 
 
+# ── Log Hub ────────────────────────────────────────────────────────────────────
+
+@app.get("/logs/workout")
+async def logs_workout(limit: int = 60, offset: int = 0):
+    from database import ironman_get_history
+    rows = ironman_get_history(limit + offset)[offset:]
+    entries = []
+    for r in rows:
+        protocol = {}
+        if r.get("protocol"):
+            try:
+                import json as _json
+                protocol = _json.loads(r["protocol"])
+            except Exception:
+                pass
+        entries.append({
+            "ts":           r.get("date", ""),
+            "type":         "workout",
+            "run_mi":       r.get("run_distance"),
+            "bike_mi":      r.get("cycle_distance"),
+            "swim_m":       r.get("swim_distance"),
+            "effort":       r.get("effort_level"),
+            "fatigue":      r.get("fatigue_level"),
+            "phase":        protocol.get("phase", ""),
+            "focus":        protocol.get("week_day_focus", ""),
+            "readiness":    protocol.get("readiness_score"),
+            "notes":        r.get("notes", ""),
+        })
+    return {"entries": entries, "total": len(entries)}
+
+
+@app.get("/logs/nutrition")
+async def logs_nutrition(limit: int = 60, offset: int = 0):
+    from database import im_get_logs
+    rows = im_get_logs(limit + offset)[offset:]
+    entries = []
+    for r in rows:
+        if not any([r.get("calories"), r.get("protein_g"), r.get("hydration_oz")]):
+            continue
+        entries.append({
+            "ts":           r.get("date", ""),
+            "type":         "nutrition",
+            "calories":     r.get("calories"),
+            "protein_g":    r.get("protein_g"),
+            "hydration_oz": r.get("hydration_oz"),
+            "fast_food":    bool(r.get("fast_food")),
+            "alcohol":      bool(r.get("alcohol")),
+            "score":        None,
+        })
+    return {"entries": entries, "total": len(entries)}
+
+
+@app.get("/logs/recovery")
+async def logs_recovery(limit: int = 60, offset: int = 0):
+    from database import im_get_logs
+    rows = im_get_logs(limit + offset)[offset:]
+    entries = []
+    for r in rows:
+        entries.append({
+            "ts":            r.get("date", ""),
+            "type":          "recovery",
+            "sleep_hours":   r.get("sleep_hours"),
+            "sleep_quality": r.get("sleep_quality"),
+            "mood":          r.get("mood"),
+            "weight_lbs":    r.get("weight_lbs"),
+            "notes":         r.get("notes", ""),
+        })
+    return {"entries": entries, "total": len(entries)}
+
+
+@app.get("/logs/system")
+async def logs_system(limit: int = 200):
+    log_file = SCRIPT_DIR / "agent.log"
+    lines = []
+    if log_file.exists():
+        raw = log_file.read_text().splitlines()
+        for line in raw[-limit:]:
+            level = "error" if "error" in line.lower() else "info"
+            lines.append({"ts": line[:19] if len(line) > 19 else "", "level": level, "msg": line})
+    from database import get_history
+    cmds = get_history(50)
+    cmd_entries = [{"ts": c.get("ts",""), "level": "cmd",
+                    "msg": f"[cmd] {c.get('input','')[:60]} → {c.get('action','')}"} for c in cmds]
+    all_entries = sorted(lines + cmd_entries, key=lambda x: x["ts"], reverse=True)
+    return {"entries": all_entries[:limit]}
+
+
+@app.get("/logs/export")
+async def logs_export(type: str = "workout", format: str = "json"):
+    import json as _json
+    from fastapi.responses import PlainTextResponse
+    if type == "workout":
+        data = (await logs_workout(limit=500)).get("entries", [])
+    elif type == "nutrition":
+        data = (await logs_nutrition(limit=500)).get("entries", [])
+    elif type == "recovery":
+        data = (await logs_recovery(limit=500)).get("entries", [])
+    else:
+        data = (await logs_system(limit=500)).get("entries", [])
+
+    if format == "csv":
+        if not data:
+            return PlainTextResponse("no data")
+        keys = list(data[0].keys())
+        rows = [",".join(keys)]
+        for row in data:
+            rows.append(",".join(str(row.get(k, "")) for k in keys))
+        return PlainTextResponse("\n".join(rows), media_type="text/csv",
+                                 headers={"Content-Disposition": f"attachment; filename={type}_log.csv"})
+    return data
+
+
 class BroadcastRequest(BaseModel):
     type: str = "agent"
     data: dict = {}
@@ -574,6 +765,187 @@ async def adler_calendar_get():
     from agents import calendar as adler_cal
     events = adler_cal.get_today_events()
     return {"events": events, "formatted": adler_cal.format_for_prompt(events)}
+
+
+# ── Coach Chat ────────────────────────────────────────────────────────────────
+
+class CoachChatRequest(BaseModel):
+    message: str
+    history: list = []
+
+
+@app.post("/coach/chat")
+async def coach_chat(req_body: CoachChatRequest):
+    from database import im_get_logs, im_get_streaks, im_get_plan
+    import json as _json
+
+    from datetime import date as _date
+    today_str = _date.today().strftime("%Y-%m-%d")
+    logs    = im_get_logs(7)
+    streaks = im_get_streaks()
+    plan    = im_get_plan(today_str)
+
+    streak_summary = ", ".join(
+        f"{s['name'].replace('_',' ')}: {s['current']}d" for s in streaks
+    ) if streaks else "no streaks yet"
+
+    log_lines = []
+    for log in logs[:5]:
+        from ironmind import _compute_score
+        score = _compute_score(log)
+        log_lines.append(
+            f"  {log['date']}: score={score}/10, workout={'yes' if log.get('workout_done') else 'no'}, "
+            f"mood={log.get('mood','?')}/10, sleep={log.get('sleep_hours','?')}h"
+        )
+
+    race_date = _date(2026, 11, 7)
+    days_out  = (race_date - _date.today()).days
+
+    athlete_ctx = f"""Jordan's IronMind data — {today_str} ({days_out} days to Ironman Florida):
+
+Streaks: {streak_summary}
+Recent logs:
+{chr(10).join(log_lines) if log_lines else '  no logs yet'}
+Today's plan: {_json.dumps(plan) if plan else 'not set'}"""
+
+    system_prompt = (
+        "You are IronMind Coach — Jordan's elite triathlon and performance coach. "
+        "Jordan is training for Ironman Florida on November 7, 2026. "
+        "You are direct, specific, and invested. No motivational fluff. "
+        "Reference Jordan's actual data in your responses. "
+        "Keep responses to 2-4 sentences unless a detailed question is asked. "
+        "Systems over goals. Consistency over intensity."
+    )
+
+    messages = []
+    for h in req_body.history[-6:]:
+        messages.append({"role": h["role"], "content": h["content"]})
+    messages.append({"role": "user", "content": f"{athlete_ctx}\n\nJordan: {req_body.message}"})
+
+    try:
+        resp = req.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key":         ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type":      "application/json",
+            },
+            json={
+                "model":      "claude-haiku-4-5-20251001",
+                "max_tokens": 500,
+                "system":     system_prompt,
+                "messages":   messages,
+            },
+            timeout=25,
+        )
+        resp.raise_for_status()
+        reply = resp.json()["content"][0]["text"].strip()
+        return {"reply": reply}
+    except Exception as e:
+        return {"reply": f"Coach offline: {e}"}
+
+
+# ── DJ Remix ──────────────────────────────────────────────────────────────────
+
+SPORT_VIBES = {
+    "SWIM":     {"default":   {"bpmRange": "125–145", "seedGenres": "electronic, trance, progressive house", "energy": 7}},
+    "BIKE":     {
+        "easy":      {"bpmRange": "120–135", "seedGenres": "indie rock, classic rock, alternative", "energy": 5},
+        "moderate":  {"bpmRange": "130–150", "seedGenres": "rock, pop punk, alternative", "energy": 7},
+        "hard":      {"bpmRange": "145–175", "seedGenres": "EDM, metal, drum and bass, hardstyle", "energy": 9},
+        "intervals": {"bpmRange": "155–185", "seedGenres": "EDM, hip hop, metal, hardstyle", "energy": 10},
+        "recovery":  {"bpmRange": "90–110",  "seedGenres": "lo-fi, acoustic, chill", "energy": 3},
+    },
+    "RUN":      {
+        "easy":      {"bpmRange": "140–155", "seedGenres": "pop, indie, funk, soul", "energy": 5},
+        "moderate":  {"bpmRange": "155–170", "seedGenres": "hip hop, pop, dancehall", "energy": 7},
+        "hard":      {"bpmRange": "170–185", "seedGenres": "hip hop, EDM, trap, rap", "energy": 9},
+        "intervals": {"bpmRange": "175–190", "seedGenres": "trap, drill, EDM, hardstyle", "energy": 10},
+        "recovery":  {"bpmRange": "120–135", "seedGenres": "lo-fi hip hop, jazz, acoustic", "energy": 3},
+    },
+    "STRENGTH": {
+        "default":   {"bpmRange": "125–150", "seedGenres": "hip hop, metal, rock, trap", "energy": 8},
+        "easy":      {"bpmRange": "115–130", "seedGenres": "hip hop, R&B, funk", "energy": 6},
+        "hard":      {"bpmRange": "140–160", "seedGenres": "metal, hardcore, trap, rap", "energy": 10},
+        "intervals": {"bpmRange": "145–165", "seedGenres": "metal, hardstyle, trap", "energy": 10},
+    },
+    "MOBILITY": {"default":   {"bpmRange": "60–85",  "seedGenres": "ambient, new age, classical, nature", "energy": 2}},
+    "RECOVERY": {"default":   {"bpmRange": "60–90",  "seedGenres": "lo-fi, ambient, jazz, acoustic, chillhop", "energy": 2}},
+}
+
+
+class DJRequest(BaseModel):
+    sport: str = "RUN"
+    intensity: str = "moderate"
+    durationMin: int = 60
+
+
+@app.post("/coach/dj")
+async def coach_dj(req_body: DJRequest):
+    sport     = req_body.sport.upper()
+    intensity = req_body.intensity.lower()
+    sport_map = SPORT_VIBES.get(sport, SPORT_VIBES["RUN"])
+    vibe      = sport_map.get(intensity) or sport_map.get("default") or list(sport_map.values())[0]
+
+    prompt = f"""You are a DJ and Ironman triathlon coach. Generate a perfect workout playlist vibe.
+
+SESSION:
+- Sport: {sport}
+- Intensity: {intensity}
+- Duration: {req_body.durationMin} minutes
+- Target BPM: {vibe['bpmRange']}
+- Genres: {vibe['seedGenres']}
+- Energy level: {vibe['energy']}/10
+
+Return ONLY valid JSON — no markdown, no explanation:
+{{
+  "vibeName": "short punchy name (e.g. 'Asphalt Heat')",
+  "tagline": "one-line hype, max 10 words",
+  "bpmRange": "{vibe['bpmRange']}",
+  "energyLevel": {vibe['energy']},
+  "genres": ["genre1", "genre2", "genre3"],
+  "tracks": [
+    {{"title": "Song Title", "artist": "Artist", "bpm": 175, "why": "5 words why"}},
+    {{"title": "Song Title", "artist": "Artist", "bpm": 180, "why": "5 words why"}},
+    {{"title": "Song Title", "artist": "Artist", "bpm": 172, "why": "5 words why"}},
+    {{"title": "Song Title", "artist": "Artist", "bpm": 178, "why": "5 words why"}},
+    {{"title": "Song Title", "artist": "Artist", "bpm": 182, "why": "5 words why"}},
+    {{"title": "Song Title", "artist": "Artist", "bpm": 170, "why": "5 words why"}}
+  ],
+  "coachNote": "one sentence connecting music to this session"
+}}
+
+Use real, well-known songs. Match BPM to target range. Be specific and creative."""
+
+    try:
+        resp = req.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key":         ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type":      "application/json",
+            },
+            json={
+                "model":      "claude-haiku-4-5-20251001",
+                "max_tokens": 800,
+                "temperature": 1.0,
+                "messages":   [{"role": "user", "content": prompt}],
+            },
+            timeout=30,
+        )
+        resp.raise_for_status()
+        raw  = resp.json()["content"][0]["text"].strip()
+        import json as _json, re as _re
+        # strip markdown code fences if present
+        clean = _re.sub(r'^```(?:json)?\s*', '', raw, flags=_re.MULTILINE)
+        clean = _re.sub(r'\s*```$', '', clean, flags=_re.MULTILINE).strip()
+        data = _json.loads(clean)
+        first_genre    = data.get("genres", ["workout"])[0]
+        spotify_query  = f"{data.get('vibeName','')} {first_genre} workout".strip()
+        data["spotifyUrl"] = f"https://open.spotify.com/search/{spotify_query.replace(' ', '%20')}"
+        return data
+    except Exception as e:
+        return {"error": str(e)}
 
 
 @app.get("/", response_class=HTMLResponse)

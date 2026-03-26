@@ -257,15 +257,15 @@ def _compute_score(log: dict) -> int:
     if log.get("workout_done"):          points += 2
     if not log.get("fast_food"):         points += 1
     if not log.get("alcohol"):           points += 1
-    sleep = log.get("sleep_hours", 0)
+    sleep = log.get("sleep_hours") or 0
     if sleep >= 7:                       points += 1.5
     elif sleep >= 6:                     points += 0.75
-    hydration = log.get("hydration_oz", 0)
+    hydration = log.get("hydration_oz") or 0
     if hydration >= 80:                  points += 1.5
     elif hydration >= 64:                points += 0.75
-    protein = log.get("protein_g", 0)
+    protein = log.get("protein_g") or 0
     if protein >= 150:                   points += 1
-    mood = log.get("mood", 5)
+    mood = log.get("mood") or 5
     points += (mood / 10)
     return min(10, round(points))
 
@@ -505,6 +505,168 @@ def weekly_review() -> str:
 def _avg(values: list) -> float:
     vals = [v for v in values if v is not None]
     return sum(vals) / len(vals) if vals else 0
+
+
+# ── Ironman Training Protocol ─────────────────────────────────────────────────
+
+IRONMAN_COACH_PROMPT = """You are an elite Ironman performance coach and systems architect embedded in Jordan's personal OS: IronMind.
+
+ATHLETE PROFILE:
+- Name: Jordan Alexander, Rockford IL
+- Goal: Finish Ironman Florida (140.6 miles) — approximately 7 months from March 2026
+- Race: 2.4mi swim + 112mi bike + 26.2mi run
+- Current weight: ~215 lbs
+- Training start: March 24, 2026
+
+7-MONTH PHASE STRUCTURE:
+- Phase 1 – Base Endurance & Technique (Months 7-5, March–June 2026): aerobic base, swim/bike/run technique, foundational strength, injury prevention
+- Phase 2 – Volume & Race-Specific Intensity (Months 4-3, July–August 2026): weekly mileage increase, race intensity, bricks, nutrition practice
+- Phase 3 – Peak & Taper (Months 2-1, September–November 2026): peak volumes, simulate race, then taper 40-60% final 2-3 weeks
+
+WEEKLY STRUCTURE (Phase 1):
+Mon: Recovery + mobility | Tue: Swim technique + light run | Wed: Bike endurance + strength | Thu: Run endurance + mobility | Fri: Swim + optional brick | Sat: Long bike | Sun: Long run
+
+ADAPTATION RULES:
+- Increase volume no more than 10% per week
+- Min 1 recovery day per week
+- Adjust intensity/volume down if fatigue >= 7/10 or sleep < 6hrs
+- Brick sessions (bike→run) increase monthly
+
+Given Jordan's daily data and recent history, return a STRICT JSON object — no prose, no markdown fences.
+
+Schema:
+{
+  "readiness_score": <int 0-100>,
+  "phase": "<e.g. Phase 1 – Base Endurance>",
+  "week_day_focus": "<e.g. Swim Technique + Light Run>",
+  "mission_statement": "<short motivating mission for today>",
+  "training_mission": {
+    "swim":              {"distance": "<e.g. 1500m or Rest>", "time": "<e.g. 35 min>", "effort": "<e.g. Zone 2 / technique>"},
+    "bike":              {"distance": "<e.g. 15 mi or Rest>", "time": "<e.g. 45 min>", "effort": "<e.g. Zone 2 easy>"},
+    "run":               {"distance": "<e.g. 3 miles or Rest>","time": "<e.g. 30 min>","effort": "<e.g. Conversational Z2>"},
+    "strength_mobility": "<e.g. Core + glutes 20 min>"
+  },
+  "nutrition_mission": {
+    "calories":     "<e.g. 2700-2900>",
+    "protein_g":    "<e.g. 185-200g>",
+    "hydration_oz": "<e.g. 110 oz>",
+    "fuel_timing":  "<brief actionable note>"
+  },
+  "recovery_mission": {
+    "sleep_target": "<e.g. 8 hrs>",
+    "actions":      ["<action>","<action>"]
+  },
+  "focus_metrics": ["<metric to hit today>","<metric to track for tomorrow>"],
+  "race_readiness": {
+    "weekly_trend":  "<brief trend note>",
+    "confidence":    "<Building / Solid / Strong / At Risk>"
+  },
+  "mission_adjustments": "<what to do if fatigued or behind — 1-2 sentences>",
+  "risk_flags": ["<flag or empty list>"]
+}
+
+Return ONLY the JSON object."""
+
+
+def generate_training_protocol(data: dict) -> dict:
+    """Call Claude to generate the daily Ironman protocol from Jordan's data."""
+    history = []
+    try:
+        from database import ironman_get_history
+        history = ironman_get_history(7)
+    except Exception:
+        pass
+
+    history_summary = ""
+    if history:
+        lines = []
+        for h in history[:7]:
+            lines.append(
+                f"  {h['date']}: run={h.get('run_distance','?')}mi, "
+                f"bike={h.get('cycle_distance','?')}mi, "
+                f"swim={h.get('swim_distance','?')}m, "
+                f"fatigue={h.get('fatigue_level','?')}/10, "
+                f"effort={h.get('effort_level','?')}/10, "
+                f"sleep={h.get('sleep_hours','?')}h, "
+                f"rhr={h.get('resting_hr','?')}"
+            )
+        history_summary = "\n\nRecent training history (last 7 days):\n" + "\n".join(lines)
+
+    user_msg = json.dumps(data, default=str) + history_summary
+
+    try:
+        resp = req.post(
+            "https://api.anthropic.com/v1/messages",
+            headers={
+                "x-api-key":         ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type":      "application/json",
+            },
+            json={
+                "model":      "claude-sonnet-4-6",
+                "max_tokens": 1500,
+                "system":     IRONMAN_COACH_PROMPT,
+                "messages":   [{"role": "user", "content": user_msg}],
+            },
+            timeout=30,
+        )
+        resp.raise_for_status()
+        raw = resp.json()["content"][0]["text"].strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        return json.loads(raw.strip())
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def save_training_data(data: dict, date_str: str = TODAY) -> dict:
+    """Save daily training data to DB and generate protocol."""
+    from database import ironman_save
+
+    protocol = generate_training_protocol(data)
+    protocol_str = json.dumps(protocol)
+
+    fields = {k: v for k, v in data.items()
+              if k in ("weight","sleep_hours","resting_hr","hrv","calories_burned",
+                       "active_calories","steps","run_distance","cycle_distance",
+                       "effort_level","fatigue_level","notes")}
+    if "workouts" in data:
+        fields["workouts"] = json.dumps(data["workouts"]) if isinstance(data["workouts"], list) else data["workouts"]
+
+    ironman_save(date_str, protocol=protocol_str, **fields)
+    return protocol
+
+
+def get_training_protocol(date_str: str = TODAY) -> dict:
+    """Return stored protocol for a given date (or empty dict)."""
+    from database import ironman_get
+    row = ironman_get(date_str)
+    if not row:
+        return {}
+    protocol_raw = row.get("protocol")
+    if protocol_raw:
+        try:
+            return {"data": row, "protocol": json.loads(protocol_raw)}
+        except Exception:
+            pass
+    return {"data": row}
+
+
+def get_training_history(limit: int = 14) -> list:
+    from database import ironman_get_history
+    rows = ironman_get_history(limit)
+    result = []
+    for r in rows:
+        entry = dict(r)
+        if entry.get("protocol"):
+            try:
+                entry["protocol"] = json.loads(entry["protocol"])
+            except Exception:
+                pass
+        result.append(entry)
+    return result
 
 
 # ── Unified handler (called from hub.py) ─────────────────────────────────────

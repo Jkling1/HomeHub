@@ -133,9 +133,25 @@ def init_db():
             INSERT OR IGNORE INTO im_streaks (name) VALUES ('clean_eating');
             INSERT OR IGNORE INTO im_streaks (name) VALUES ('no_alcohol');
             INSERT OR IGNORE INTO im_streaks (name) VALUES ('hydration');
-            INSERT OR IGNORE INTO im_identity (statement) VALUES ('I am the type of person who does the hard thing first.');
-            INSERT OR IGNORE INTO im_identity (statement) VALUES ('I am the type of person who shows up every single day.');
-            INSERT OR IGNORE INTO im_identity (statement) VALUES ('I am the type of person who builds, not just consumes.');
+            CREATE TABLE IF NOT EXISTS ironman_training (
+                date             TEXT PRIMARY KEY,
+                weight           REAL,
+                sleep_hours      REAL,
+                resting_hr       INTEGER,
+                hrv              REAL,
+                calories_burned  INTEGER,
+                active_calories  INTEGER,
+                steps            INTEGER,
+                run_distance     REAL,
+                cycle_distance   REAL,
+                swim_distance    REAL,
+                workouts         TEXT,
+                effort_level     INTEGER,
+                fatigue_level    INTEGER,
+                notes            TEXT,
+                protocol         TEXT,
+                generated_at     TEXT
+            );
             CREATE TABLE IF NOT EXISTS scenes (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 name        TEXT NOT NULL UNIQUE,
@@ -407,7 +423,11 @@ def im_add_identity(statement: str):
         _sb().table("im_identity").insert({"statement": statement}).execute()
     else:
         with get_conn() as conn:
-            conn.execute("INSERT INTO im_identity (statement) VALUES (?)", (statement,))
+            exists = conn.execute(
+                "SELECT id FROM im_identity WHERE statement=? AND active=1", (statement,)
+            ).fetchone()
+            if not exists:
+                conn.execute("INSERT INTO im_identity (statement) VALUES (?)", (statement,))
 
 
 def im_remove_identity(identity_id: int):
@@ -416,6 +436,51 @@ def im_remove_identity(identity_id: int):
     else:
         with get_conn() as conn:
             conn.execute("UPDATE im_identity SET active=0 WHERE id=?", (identity_id,))
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# IRONMAN TRAINING
+# ══════════════════════════════════════════════════════════════════════════════
+
+def ironman_save(date: str, protocol: str = None, **fields):
+    cols = ["date"]
+    vals = [date]
+    for k, v in fields.items():
+        if v is not None:
+            cols.append(k)
+            vals.append(v)
+    if protocol is not None:
+        cols += ["protocol", "generated_at"]
+        vals += [protocol, datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
+
+    placeholders = ",".join("?" * len(vals))
+    col_str = ",".join(cols)
+    updates = ",".join(f"{c}=excluded.{c}" for c in cols if c != "date")
+
+    with get_conn() as conn:
+        conn.execute(
+            f"INSERT INTO ironman_training ({col_str}) VALUES ({placeholders}) "
+            f"ON CONFLICT(date) DO UPDATE SET {updates}",
+            vals,
+        )
+
+
+def ironman_get(date: str) -> dict:
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT * FROM ironman_training WHERE date=?", (date,)
+        ).fetchone()
+        if row:
+            return dict(row)
+    return {}
+
+
+def ironman_get_history(limit: int = 14) -> list:
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT * FROM ironman_training ORDER BY date DESC LIMIT ?", (limit,)
+        ).fetchall()
+        return [dict(r) for r in rows]
 
 
 # ══════════════════════════════════════════════════════════════════════════════
