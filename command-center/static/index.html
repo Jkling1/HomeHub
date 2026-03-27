@@ -1840,12 +1840,6 @@ textarea { resize: vertical; min-height: 70px; }
 <div class="main" id="main">
 
   <!-- ── AGENT STATUS BAR (always visible inside main) ── -->
-  <div id="agent-status-bar">
-    <span><span class="asb-dot asb-dot-dim" id="asb-dot-evolve"></span><span id="asb-evolve">⚙️ EVOLVE —</span></span>
-    <span><span class="asb-dot asb-dot-dim" id="asb-dot-morning"></span><span id="asb-morning">☀️ Morning —</span></span>
-    <span><span class="asb-dot asb-dot-dim" id="asb-dot-hub"></span><span id="asb-server">🟢 Hub Online</span></span>
-    <span style="margin-left:auto;opacity:.5;font-size:.62rem" id="asb-last-update"></span>
-  </div>
 
   <!-- ── HOME ── -->
   <div class="panel active" id="panel-home">
@@ -1886,10 +1880,16 @@ textarea { resize: vertical; min-height: 70px; }
       <!-- Weather -->
       <div class="card">
         <div class="card-label"><span class="dot"></span> Rockford, IL</div>
-        <div id="h-wx-icon"></div>
-        <div class="weather-temp" id="h-temp"><div class="skel skel-text lg" style="width:100px"></div></div>
-        <div class="weather-desc" id="h-desc"><div class="skel skel-text sm" style="margin-top:.5rem"></div></div>
+        <div style="display:flex;align-items:center;gap:.75rem;margin:.25rem 0">
+          <div id="h-wx-icon"></div>
+          <div>
+            <div class="weather-temp" id="h-temp"><div class="skel skel-text lg" style="width:80px"></div></div>
+            <div class="weather-desc" id="h-desc"><div class="skel skel-text sm" style="margin-top:.3rem"></div></div>
+          </div>
+        </div>
         <div class="weather-meta" id="h-meta"></div>
+        <!-- 3-day forecast -->
+        <div id="h-forecast" style="display:flex;gap:.3rem;margin-top:.6rem;flex-wrap:wrap"></div>
       </div>
       <!-- Music mini -->
       <div class="card music-card">
@@ -2094,6 +2094,81 @@ textarea { resize: vertical; min-height: 70px; }
       <h2>🧠 IronMind</h2>
       <p>Daily performance system — train your mind like you train your body.</p>
     </div>
+
+    <!-- ── Race Timeline ── -->
+    <div class="card" style="margin-bottom:1rem">
+      <div class="card-label" style="display:flex;justify-content:space-between;align-items:center">
+        <span><span class="dot dot-cyan"></span> Ironman Florida — Nov 7, 2026</span>
+        <span id="im-days-label" style="font-family:var(--mono);font-size:.72rem;color:var(--cyan)"></span>
+      </div>
+
+      <!-- Sport icons -->
+      <div style="display:flex;justify-content:center;gap:2rem;margin:.85rem 0 .5rem">
+        <!-- Swim -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:.3rem">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="5" r="2"/>
+            <path d="M6 11l2-4 4 2 4-4"/>
+            <path d="M4 17c1.5 0 2.5-1 4-1s2.5 1 4 1 2.5-1 4-1"/>
+            <path d="M4 20c1.5 0 2.5-1 4-1s2.5 1 4 1 2.5-1 4-1"/>
+          </svg>
+          <span style="font-size:.6rem;color:var(--text3);font-family:var(--mono);letter-spacing:.05em">SWIM</span>
+          <span style="font-size:.68rem;color:var(--muted)">2.4 mi</span>
+        </div>
+        <!-- Bike -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:.3rem">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="5.5" cy="17.5" r="3.5"/>
+            <circle cx="18.5" cy="17.5" r="3.5"/>
+            <path d="M15 6h-3l-2 5.5 5 3-2-8.5"/>
+            <path d="M5.5 17.5L9 10l3 3"/>
+            <circle cx="15.5" cy="5.5" r="1"/>
+          </svg>
+          <span style="font-size:.6rem;color:var(--text3);font-family:var(--mono);letter-spacing:.05em">BIKE</span>
+          <span style="font-size:.68rem;color:var(--muted)">112 mi</span>
+        </div>
+        <!-- Run -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:.3rem">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="13" cy="4" r="2"/>
+            <path d="M7 21l3-6 3 3 3-3 2 6"/>
+            <path d="M6 12l2-4 5 1 3-3"/>
+          </svg>
+          <span style="font-size:.6rem;color:var(--text3);font-family:var(--mono);letter-spacing:.05em">RUN</span>
+          <span style="font-size:.68rem;color:var(--muted)">26.2 mi</span>
+        </div>
+        <!-- Finish -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:.3rem">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16v4H4z" fill="rgba(255,255,255,.15)"/>
+            <path d="M4 4h8v4H4z" fill="rgba(255,255,255,.3)"/>
+            <line x1="4" y1="4" x2="4" y2="20"/>
+            <path d="M8 12h12"/>
+            <path d="M8 16h12"/>
+          </svg>
+          <span style="font-size:.6rem;color:var(--cyan);font-family:var(--mono);letter-spacing:.05em">FINISH</span>
+          <span style="font-size:.68rem;color:var(--cyan)">140.6</span>
+        </div>
+      </div>
+
+      <!-- Timeline bar -->
+      <div style="position:relative;margin:.85rem 0 1.75rem">
+        <div style="height:6px;background:rgba(255,255,255,.08);border-radius:999px;overflow:visible;position:relative">
+          <div id="im-progress-fill" style="height:100%;border-radius:999px;background:linear-gradient(90deg,var(--violet),var(--cyan));transition:width .6s ease"></div>
+        </div>
+        <!-- You Are Here marker -->
+        <div id="im-you-here" style="position:absolute;top:-22px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;pointer-events:none">
+          <div style="font-size:.58rem;font-weight:700;color:var(--cyan);font-family:var(--mono);white-space:nowrap;background:rgba(0,212,255,.12);padding:.1rem .35rem;border-radius:4px;border:1px solid rgba(0,212,255,.3)">YOU ARE HERE</div>
+          <div style="width:1px;height:12px;background:var(--cyan);margin-top:2px"></div>
+        </div>
+        <!-- Start / End labels -->
+        <div style="display:flex;justify-content:space-between;margin-top:.5rem">
+          <span style="font-size:.62rem;color:var(--text3);font-family:var(--mono)">Nov 6, 2025</span>
+          <span style="font-size:.62rem;color:var(--cyan);font-family:var(--mono)">🏁 Nov 7, 2026</span>
+        </div>
+      </div>
+    </div>
+
     <div class="grid g3" style="margin-bottom:1rem">
       <!-- Score ring -->
       <div class="card">
@@ -3851,7 +3926,26 @@ async function loadMetricsIntoForm() {
   } catch(e) {}
 }
 
+function renderRaceTimeline() {
+  const START = new Date('2025-11-06');
+  const RACE  = new Date('2026-11-07');
+  const now   = new Date();
+  const total = RACE - START;
+  const elapsed = now - START;
+  const pct = Math.min(100, Math.max(0, (elapsed / total) * 100));
+  const daysLeft = Math.ceil((RACE - now) / 86400000);
+
+  const fill = document.getElementById('im-progress-fill');
+  const marker = document.getElementById('im-you-here');
+  const label = document.getElementById('im-days-label');
+
+  if (fill) fill.style.width = pct.toFixed(1) + '%';
+  if (marker) marker.style.left = pct.toFixed(1) + '%';
+  if (label) label.textContent = `${daysLeft} days to go`;
+}
+
 async function loadIronMind() {
+  renderRaceTimeline();
   buildMetrics();
   try {
     const [streaks, plan] = await Promise.all([api('/ironmind/streaks'), api('/ironmind/plan')]);
@@ -4668,35 +4762,61 @@ function _wxSnow() {
 
 async function loadWeather() {
   const el = document.getElementById('intel-weather');
-  ['h-temp','h-desc','h-meta'].forEach(id => {
-    const e = document.getElementById(id);
-    if(e) e.innerHTML = '';
-  });
   try {
     const d = await api('/weather');
-    const text = d.result || '';
-    const tempMatch = text.match(/(-?\d+)°F/);
-    const temp = tempMatch ? tempMatch[0] : '';
-    const descRaw = text.replace(/🌤\s*/,'').replace(temp,'').replace(/^[,\s]+/,'').trim();
+    const icon = _wxIcon(d.desc || '');
+    const temp = d.temp ? `${d.temp}°F` : '';
 
-    // Intel card
-    if (el) el.innerHTML = `
-      <div style="display:flex;align-items:center;gap:1rem">
-        ${_wxIcon(text)}
-        <div>
-          <div style="font-family:var(--mono);font-size:2.2rem;font-weight:700;color:var(--cyan)">${temp}</div>
-          <div style="color:var(--text2);font-size:.85rem;margin-top:.1rem">${descRaw.split(',')[0]}</div>
-          <div style="color:var(--muted);font-size:.75rem;margin-top:.2rem">${descRaw.split(',').slice(1).join(',').trim()}</div>
+    // ── Intel card ──
+    if (el) {
+      const hourlyHtml = (d.hourly || []).map(h => `
+        <div style="text-align:center;flex:1;min-width:48px">
+          <div style="font-size:.65rem;color:var(--muted)">${h.time}</div>
+          <div style="font-size:.82rem;font-weight:600;color:var(--text1);margin:.2rem 0">${h.temp}°</div>
+          ${h.precip_pct > 20 ? `<div style="font-size:.6rem;color:var(--cyan)">💧${h.precip_pct}%</div>` : ''}
+        </div>`).join('');
+
+      const dailyHtml = (d.daily || []).map(day => `
+        <div style="display:flex;align-items:center;gap:.5rem;padding:.35rem 0;border-top:1px solid rgba(255,255,255,.05)">
+          <div style="width:42px;font-size:.75rem;color:var(--text2);font-weight:600">${day.day}</div>
+          <div style="font-size:.72rem;color:var(--text3);flex:1">${day.desc}</div>
+          ${day.precip_pct > 20 ? `<div style="font-size:.65rem;color:var(--cyan)">💧${day.precip_pct}%</div>` : ''}
+          <div style="font-size:.75rem;font-weight:600;color:var(--text1);min-width:60px;text-align:right">${day.high}° / ${day.low}°</div>
+        </div>`).join('');
+
+      el.innerHTML = `
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:.75rem">
+          ${icon}
+          <div>
+            <div style="font-family:var(--mono);font-size:2.4rem;font-weight:700;color:var(--cyan);line-height:1">${temp}</div>
+            <div style="color:var(--text2);font-size:.85rem;margin-top:.2rem">${d.desc} · Feels ${d.feels_like}°F</div>
+            <div style="color:var(--muted);font-size:.72rem;margin-top:.15rem">💨 ${d.wind_mph} mph · 💧 ${d.humidity}% humidity</div>
+          </div>
         </div>
-      </div>`;
+        ${hourlyHtml ? `<div style="display:flex;gap:.25rem;padding:.5rem 0;border-top:1px solid rgba(255,255,255,.07);border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:.5rem">${hourlyHtml}</div>` : ''}
+        ${dailyHtml}`;
+    }
 
-    // Home card
+    // ── Home card ──
     const iconEl = document.getElementById('h-wx-icon');
-    if (iconEl) iconEl.innerHTML = _wxIcon(text);
+    if (iconEl) iconEl.innerHTML = icon;
     const ht = document.getElementById('h-temp');
     if (ht) ht.textContent = temp;
     const hd = document.getElementById('h-desc');
-    if (hd) hd.textContent = descRaw.split(',')[0];
+    if (hd) hd.textContent = `${d.desc} · Feels ${d.feels_like}°F`;
+    const hm = document.getElementById('h-meta');
+    if (hm) hm.textContent = `💨 ${d.wind_mph} mph  💧 ${d.humidity}%`;
+
+    // 3-day forecast chips on home card
+    const fc = document.getElementById('h-forecast');
+    if (fc && d.daily) {
+      fc.innerHTML = d.daily.map(day => `
+        <div style="flex:1;text-align:center;background:rgba(255,255,255,.04);border-radius:8px;padding:.35rem .25rem;min-width:52px">
+          <div style="font-size:.62rem;color:var(--muted);font-weight:600">${day.day}</div>
+          <div style="font-size:.72rem;font-weight:700;color:var(--text1);margin:.15rem 0">${day.high}°<span style="color:var(--text3);font-weight:400">/${day.low}°</span></div>
+          <div style="font-size:.58rem;color:var(--text3)">${day.desc.split(' ')[0]}</div>
+        </div>`).join('');
+    }
   } catch(e) {
     if(el) el.innerHTML = `<div style="color:var(--muted)">${e.message}</div>`;
   }
@@ -5037,7 +5157,53 @@ async function loadHistory() {
   } catch {}
 }
 
-/* ── Voice Input ── */
+/* ── Voice Input (Whisper-first, falls back to Web Speech) ── */
+let _whisperAvailable = null;
+async function _checkWhisper() {
+  if (_whisperAvailable !== null) return _whisperAvailable;
+  try {
+    const r = await fetch('/voice/status');
+    const d = await r.json();
+    _whisperAvailable = d.available === true;
+  } catch { _whisperAvailable = false; }
+  return _whisperAvailable;
+}
+
+let _mediaRecorder = null;
+let _audioChunks = [];
+
+async function _startWhisperRecording(btn) {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    _audioChunks = [];
+    _mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    _mediaRecorder.ondataavailable = e => { if (e.data.size > 0) _audioChunks.push(e.data); };
+    _mediaRecorder.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      btn.classList.remove('recording');
+      btn.textContent = '⏳';
+      const blob = new Blob(_audioChunks, { type: 'audio/webm' });
+      const form = new FormData();
+      form.append('audio', blob, 'voice.webm');
+      try {
+        const r = await fetch('/voice/transcribe', { method: 'POST', body: form });
+        const d = await r.json();
+        if (d.text) {
+          document.getElementById('cmd-input').value = d.text;
+          document.getElementById('cmd-input').focus();
+        } else { toast('No speech detected', 'error'); }
+      } catch { toast('Transcription failed', 'error'); }
+      btn.textContent = '🎙';
+    };
+    _mediaRecorder.start();
+    btn.classList.add('recording');
+  } catch {
+    toast('Microphone access denied', 'error');
+    btn.classList.remove('recording');
+  }
+}
+
+// Legacy Web Speech fallback
 let recognition;
 if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -5051,11 +5217,22 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     document.getElementById('voice-btn').classList.remove('recording');
   };
 }
-document.getElementById('voice-btn').onclick = () => {
-  if (!recognition) { toast('Voice not supported','error'); return; }
+
+document.getElementById('voice-btn').onclick = async () => {
   const btn = document.getElementById('voice-btn');
-  if (btn.classList.contains('recording')) { recognition.stop(); }
-  else { btn.classList.add('recording'); recognition.start(); }
+  if (_mediaRecorder && _mediaRecorder.state === 'recording') {
+    _mediaRecorder.stop();
+    return;
+  }
+  const useWhisper = await _checkWhisper();
+  if (useWhisper) {
+    await _startWhisperRecording(btn);
+  } else if (recognition) {
+    if (btn.classList.contains('recording')) { recognition.stop(); }
+    else { btn.classList.add('recording'); recognition.start(); }
+  } else {
+    toast('Voice not supported', 'error');
+  }
 };
 
 /* ── Feed: populate from history on load ── */

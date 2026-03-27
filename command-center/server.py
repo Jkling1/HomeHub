@@ -183,15 +183,89 @@ def exec_briefing() -> str:
     return out.replace("\\.", ".").replace("\\!", "!").replace("\\-", "-").replace("\\'", "'").replace("\\+", "+").replace("\\(", "(").replace("\\)", ")").replace("\\[", "[").replace("\\]", "]").replace("\\,", ",").replace("\\/", "/").replace("\\?", "?")
 
 
-def exec_weather() -> str:
+WMO_CODES = {
+    0:"Clear sky",1:"Mainly clear",2:"Partly cloudy",3:"Overcast",
+    45:"Foggy",48:"Icy fog",51:"Light drizzle",53:"Drizzle",55:"Heavy drizzle",
+    61:"Light rain",63:"Rain",65:"Heavy rain",71:"Light snow",73:"Snow",75:"Heavy snow",
+    77:"Snow grains",80:"Light showers",81:"Showers",82:"Heavy showers",
+    85:"Snow showers",86:"Heavy snow showers",95:"Thunderstorm",
+    96:"Thunderstorm w/ hail",99:"Thunderstorm w/ heavy hail",
+}
+
+_weather_cache = {"data": None, "ts": 0}
+
+def fetch_weather_forecast() -> dict:
+    import time
+    if _weather_cache["data"] and time.time() - _weather_cache["ts"] < 600:
+        return _weather_cache["data"]
     try:
-        r = req.get("https://wttr.in/Rockford,IL?format=j1", timeout=8,
-                    headers={"User-Agent": "JordanHub/1.0"})
-        d = r.json()["current_condition"][0]
-        return (f"🌤 {d['weatherDesc'][0]['value']}, {d['temp_F']}°F, "
-                f"feels like {d['FeelsLikeF']}°F, humidity {d['humidity']}%")
+        url = (
+            "https://api.open-meteo.com/v1/forecast"
+            "?latitude=42.2711&longitude=-89.0940"
+            "&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m"
+            "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max"
+            "&hourly=temperature_2m,weather_code,precipitation_probability"
+            "&temperature_unit=fahrenheit&wind_speed_unit=mph"
+            "&timezone=America%2FChicago&forecast_days=3"
+        )
+        r = req.get(url, timeout=8)
+        r.raise_for_status()
+        raw = r.json()
+        cur = raw["current"]
+        daily = raw["daily"]
+        hourly = raw["hourly"]
+
+        # Build today's hourly (next 12 hours)
+        from datetime import datetime
+        now_hour = datetime.now().hour
+        hours_out = []
+        for i, t in enumerate(hourly["time"]):
+            h = int(t[11:13])
+            day_offset = t[:10]
+            if day_offset == daily["time"][0] and h >= now_hour:
+                hours_out.append({
+                    "time": f"{h % 12 or 12}{'am' if h < 12 else 'pm'}",
+                    "temp": round(hourly["temperature_2m"][i]),
+                    "code": hourly["weather_code"][i],
+                    "desc": WMO_CODES.get(hourly["weather_code"][i], ""),
+                    "precip_pct": hourly["precipitation_probability"][i],
+                })
+            if len(hours_out) >= 6:
+                break
+
+        # 3-day forecast
+        days_out = []
+        day_names = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
+        for i in range(3):
+            dt = datetime.strptime(daily["time"][i], "%Y-%m-%d")
+            days_out.append({
+                "day": "Today" if i == 0 else day_names[dt.weekday()],
+                "high": round(daily["temperature_2m_max"][i]),
+                "low":  round(daily["temperature_2m_min"][i]),
+                "code": daily["weather_code"][i],
+                "desc": WMO_CODES.get(daily["weather_code"][i], ""),
+                "precip_pct": daily["precipitation_probability_max"][i],
+            })
+
+        result = {
+            "temp": round(cur["temperature_2m"]),
+            "feels_like": round(cur["apparent_temperature"]),
+            "humidity": cur["relative_humidity_2m"],
+            "wind_mph": round(cur["wind_speed_10m"]),
+            "code": cur["weather_code"],
+            "desc": WMO_CODES.get(cur["weather_code"], "Clear"),
+            "hourly": hours_out,
+            "daily": days_out,
+            "result": f"🌤 {WMO_CODES.get(cur['weather_code'],'Clear')}, {round(cur['temperature_2m'])}°F, feels like {round(cur['apparent_temperature'])}°F, humidity {cur['relative_humidity_2m']}%",
+        }
+        _weather_cache["data"] = result
+        _weather_cache["ts"] = time.time()
+        return result
     except Exception as e:
-        return f"Weather unavailable: {e}"
+        return {"result": f"Weather unavailable: {e}", "temp": None, "desc": ""}
+
+def exec_weather() -> str:
+    return fetch_weather_forecast().get("result", "Weather unavailable")
 
 
 def exec_stock() -> str:
@@ -308,7 +382,7 @@ async def music_endpoint(req_body: MusicRequest):
 
 @app.get("/weather")
 async def get_weather():
-    return {"result": exec_weather()}
+    return fetch_weather_forecast()
 
 
 @app.get("/history")
@@ -1209,6 +1283,52 @@ Give him exactly 5 song recommendations. Respond with ONLY valid JSON:
 @app.get("/", response_class=HTMLResponse)
 async def dashboard():
     return FileResponse(str(SCRIPT_DIR / "static" / "index.html"))
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# VOICE / WHISPER
+# ══════════════════════════════════════════════════════════════════════════════
+
+from fastapi import UploadFile, File as FastAPIFile
+import tempfile, shutil
+
+_whisper_model = None
+
+def _get_whisper():
+    global _whisper_model
+    if _whisper_model is None:
+        import whisper
+        _whisper_model = whisper.load_model("base")
+    return _whisper_model
+
+@app.post("/voice/transcribe")
+async def voice_transcribe(audio: UploadFile = FastAPIFile(...)):
+    try:
+        import whisper
+        suffix = ".webm"
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            shutil.copyfileobj(audio.file, tmp)
+            tmp_path = tmp.name
+        model = _get_whisper()
+        result = model.transcribe(tmp_path)
+        import os; os.unlink(tmp_path)
+        return {"text": result["text"].strip()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/voice/status")
+async def voice_status():
+    try:
+        import whisper
+        import subprocess
+        result = subprocess.run(["ffmpeg", "-version"], capture_output=True, timeout=3)
+        if result.returncode != 0:
+            return {"available": False, "reason": "ffmpeg not found"}
+        return {"available": True, "model": "base"}
+    except FileNotFoundError:
+        return {"available": False, "reason": "ffmpeg not installed"}
+    except Exception as e:
+        return {"available": False, "reason": str(e)}
 
 
 # ══════════════════════════════════════════════════════════════════════════════
